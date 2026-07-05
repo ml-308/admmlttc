@@ -1,0 +1,9 @@
+@import url('./main.css');
+/* @import url('./derive/deepseek.index.css'); */
+@import url('./derive/group.css');
+
+.LP {
+    font-size: .75rem;
+    margin-left: 1rem;
+    margin-top: -.25rem;
+}

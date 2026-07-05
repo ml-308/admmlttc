@@ -1,0 +1,457 @@
+<template id="template-hcw-modal-root">
+    <style>
+        .modal-root {
+            /* display: none; */
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(20, 32, 46, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            animation: modalFadeOut 0.25s ease-in-out 0s 1 forwards;
+            pointer-events: none;
+        }
+
+        .modal-root[open='true'] {
+            animation: modalFadeIn 0.25s ease-in-out 0s 1 forwards;
+            pointer-events: initial;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                display: flex;
+            }
+
+            to {
+                opacity: 1;
+                display: flex;
+            }
+        }
+
+        @keyframes modalFadeOut {
+            from {
+                opacity: 1;
+                display: flex;
+            }
+
+            to {
+                opacity: 0;
+                display: none;
+            }
+        }
+    </style>
+    <div class="modal-root">
+        <slot></slot>
+    </div>
+</template>
+
+<template id="template-hcw-footer">
+    <style>
+        a {
+            color: var(--link-color);
+        }
+    </style>
+    <div>
+        <slot name="content">
+            mlttc 2026 <a href="https://space.bilibili.com/3493109946124506">马陆梦想家</a>, <a
+                href="https://space.bilibili.com/582594431">LoFF_RtN</a> ALL RIGHTS RESERVED
+        </slot>
+    </div>
+</template>
+
+<template id="template-hcw-flex">
+    <style>
+        .inner-root {
+            display: flex;
+            gap: 1rem;
+        }
+    </style>
+    <div class='inner-root'>
+        <slot></slot>
+    </div>
+</template>
+
+<template id="template-hcw-button">
+    <style>
+        .inner-root {
+            appearance: none;
+            border: none;
+            position: relative;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-lg);
+            background-color: var(--button-bg);
+            color: var(--button-color);
+            padding: .45rem .25rem;
+            backdrop-filter: blur(.5rem) saturate(3);
+            box-shadow:
+                0 0 .25rem #0001,
+                inset 0 .1rem .025rem .025rem var(--glass-inner-hl),
+                inset 0 -.1rem .025rem .025rem var(--glass-inner-dl);
+            text-shadow: 0 0 .25rem var(--glass-inner-hl);
+            transition: var(--transition-fast);
+            transition-property: transform, background-color, color, box-shadow;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1rem;
+            min-height: 2.25rem;
+            min-width: 2.25rem;
+            text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+            animation: general_fadeIn_fixed_noreplace_dontrestore var(--transition-slow) 0s 1 forwards;
+        }
+
+        :host-context(hcw-card)>.inner-root,
+        :host-context([hcw-card])>.inner-root {
+            background-color: transparent;
+            box-shadow:
+                0 0 .25rem #0001,
+                inset 0 .1rem .015rem .015rem var(--glass-inner-hl),
+                inset 0 -.1rem .015rem .015rem var(--glass-inner-dl);
+            border-radius: var(--radius-md);
+        }
+
+        :host([large])>.inner-root {
+            font-size: 1.25rem;
+        }
+
+        :host([inline])>.inner-root {
+            display: inline-flex;
+        }
+
+        :host([icon])>.inner-root {
+            aspect-ratio: 1;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        :host([icon][large])>.inner-root {
+            min-height: 3rem;
+        }
+
+        :host(:not([disabled], [primary], [variant]):hover)>.inner-root {
+            background-color: var(--button-bg-hl);
+            color: var(--button-color-hl);
+        }
+
+        :host([tp])>.inner-root {
+            background-color: transparent;
+        }
+
+        :host([fill])>.inner-root {
+            background-color: var(--button-fill-bg);
+            color: var(--button-fill-color);
+        }
+
+        :host([variant='success'])>.inner-root {
+            background-color: var(--success);
+            color: var(--success-light);
+        }
+
+        :host([variant='danger'])>.inner-root {
+            background-color: var(--danger);
+            color: var(--danger-light);
+        }
+
+        :host([variant='warning'])>.inner-root {
+            background-color: var(--warning);
+            color: var(--warning-light);
+        }
+
+        :host([variant]:hover)>.inner-root {
+            filter: brightness(1.05);
+        }
+
+        :host([primary])>.inner-root {
+            background-color: var(--primary);
+            color: var(--on-primary);
+        }
+
+        :host([primary]:hover)>.inner-root {
+            background-color: var(--primary-hl);
+            color: var(--on-primary-hl);
+        }
+
+        :host([flat])>.inner-root {
+            box-shadow: none;
+        }
+
+        :host([disabled])>.inner-root {
+            filter: saturate(0);
+            cursor: not-allowed;
+            box-shadow: none;
+            color: var(--button-color-disabled);
+        }
+    </style>
+    <div class="inner-root">
+        <slot></slot>
+    </div>
+</template>
+
+<template id="template-hcw-input">
+    <style>
+        .inner-root {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.02em;
+        }
+
+        input {
+            appearance: none;
+            border: none;
+            position: relative;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            border-radius: var(--radius-md);
+            background-color: var(--input-bg);
+            color: var(--input-color);
+            padding: .75rem .45rem;
+            backdrop-filter: blur(.5rem) saturate(3);
+            text-shadow: 0 0 .25rem var(--glass-inner-hl);
+            transition: var(--transition-fast);
+            transition-property: transform, background-color, color, box-shadow;
+            cursor: text;
+            font-size: 1rem;
+            border: .15rem solid #8881;
+            animation: general_fadeIn_fixed_noreplace_dontrestore var(--transition-slow) 0s 1 forwards;
+        }
+
+        :host([large]) input {
+            font-size: 1.25rem;
+        }
+
+        :host(:not([disabled]):hover) input {
+            background-color: var(--input-bg-hl);
+            color: var(--input-color-hl);
+        }
+
+        :host([tp]) input {
+            background-color: transparent;
+        }
+
+        :host([primary]) input::placeholder {
+            opacity: .5;
+            color: var(--primary);
+
+            &:hover {
+                color: var(--primary-hl);
+            }
+        }
+
+        :host([disabled]) input {
+            filter: saturate(0);
+            cursor: not-allowed;
+            box-shadow: none;
+            color: var(--button-color-disabled);
+        }
+    </style>
+    <div class="inner-root">
+        <label>
+            <slot name="label"></slot>
+        </label>
+        <input>
+    </div>
+</template>
+
+<template id="template-hcw-textarea">
+    <style>
+        .inner-root {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.02em;
+        }
+
+        textarea {
+            height:110px;
+            appearance: none;
+            border: none;
+            position: relative;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            border-radius: var(--radius-md);
+            background-color: var(--input-bg);
+            color: var(--input-color);
+            padding: .75rem .45rem;
+            backdrop-filter: blur(.5rem) saturate(3);
+            text-shadow: 0 0 .25rem var(--glass-inner-hl);
+            transition: var(--transition-fast);
+            transition-property: transform, background-color, color, box-shadow;
+            cursor: text;
+            font-size: 1rem;
+            border: .15rem solid #8881;
+            animation: general_fadeIn_fixed_noreplace_dontrestore var(--transition-slow) 0s 1 forwards;
+        }
+
+        :host([large]) textarea {
+            font-size: 1.25rem;
+        }
+
+        :host(:not([disabled]):hover) textarea {
+            background-color: var(--input-bg-hl);
+            color: var(--input-color-hl);
+        }
+
+        :host([tp]) textarea {
+            background-color: transparent;
+        }
+
+        :host([primary]) textarea::placeholder {
+            opacity: .5;
+            color: var(--primary);
+
+            &:hover {
+                color: var(--primary-hl);
+            }
+        }
+
+        :host([disabled]) textarea {
+            filter: saturate(0);
+            cursor: not-allowed;
+            box-shadow: none;
+            color: var(--button-color-disabled);
+        }
+
+        textarea[readonly] {
+            background-color: transparent;
+            border: none;
+            outline: none;
+            resize: vertical;
+            border-radius: var(--radius-md);
+            backdrop-filter: none;
+        }
+    </style>
+    <div class="inner-root">
+        <label>
+            <slot name="label"></slot>
+        </label>
+        <textarea></textarea>
+    </div>
+</template>
+
+<template id="template-hcw-hero">
+    <style>
+        :host {
+            position: relative;
+        }
+
+        :host::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            aspect-ratio: 1;
+            max-width: 40%;
+            background: url('/asset/bg-main.jpg') no-repeat center;
+            background-size: cover;
+            border-radius: var(--radius-lg);
+        }
+
+        h1,
+        h2,
+        p {
+            margin: 1rem;
+        }
+
+        div {
+            padding: 1rem;
+            position: relative;
+            max-width: 60%;
+            word-wrap: break-all;
+            overflow: hidden;
+        }
+    </style>
+    <div>
+        <slot></slot>
+    </div>
+</template>
+
+<template id="template-hcw-popup">
+    <style>
+        .inner-root {
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            border-radius: var(--radius-lg);
+            background-color: var(--glass-bg);
+            color: var(--glass-text);
+            padding: 1rem;
+            backdrop-filter: blur(.5rem) saturate(3);
+            box-shadow:
+                0 0 .25rem #0001,
+                inset 0 .1rem .025rem .025rem var(--glass-inner-hl),
+                inset 0 -.1rem .025rem .025rem var(--glass-inner-dl);
+            text-shadow: 0 0 .25rem var(--glass-inner-hl);
+            transition: var(--transition-fast);
+            transition-property: transform, background-color, color, box-shadow;
+            overflow: hidden;
+            margin-bottom: 5rem;
+        }
+
+        [name='text'] {
+            font-weight: 300;
+            margin: 0;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        [name='btn-group'] {
+            display: flex;
+            gap: .5rem;
+            margin-left: auto;
+            flex-wrap: wrap;
+
+            & hcw-button {
+                min-width: max(5vw, 6.5rem);
+            }
+        }
+
+        @media(max-width: 480px) {
+            .inner-root {
+                min-width: 100vw;
+                border-radius: 0px;
+            }
+
+            [name='btn-group'] {
+                flex-direction: column;
+                margin-left: initial;
+            }
+        }
+    </style>
+    <hcw-modal-root>
+        <div class="inner-root">
+            <h2 name="text"></h2>
+            <div name="btn-group">
+
+            </div>
+        </div>
+    </hcw-modal-root>
+</template>
