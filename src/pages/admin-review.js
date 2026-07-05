@@ -45,7 +45,7 @@ const unreviewedPageInfo = document.getElementById('unreviewedPageInfo');
 const reviewedPageInfo = document.getElementById('reviewedPageInfo');
 const rejectedPageInfo = document.getElementById('rejectedPageInfo');
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 2;
 
 // ─── 分页状态 ───────────────────────────────
 const pageState = {
