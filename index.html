@@ -78,8 +78,8 @@
             loginBtn.textContent = '验证中...';
 
             try {
-                // 调用已有登录 API 校验账号密码
-                const res = await fetch('/api/login-D1', {
+                // 第一步：调用管理员登录 API（服务端校验邮箱密码 + 管理员权限）
+                const res = await fetch('/api/admin-login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -88,13 +88,13 @@
                 const data = await res.json();
 
                 if (!res.ok || !data.success) {
-                    showError(data.message || '账号或密码错误');
+                    showError(data.message || '管理员账号或密码错误');
                     loginBtn.disabled = false;
                     loginBtn.textContent = '验证身份';
                     return;
                 }
 
-                // 登录成功，获取用户信息（含 adm 字段）
+                // 第二步：获取用户档案，校验管理员令牌
                 const profileRes = await fetch('/api/profile', { credentials: 'include' });
                 if (!profileRes.ok) {
                     showError('无法获取用户信息');
@@ -105,18 +105,18 @@
                 const profileData = await profileRes.json();
                 const user = profileData.user || profileData;
 
-                // 校验管理员令牌是否与 USER.adm 匹配
-                if (!user.adm || user.adm !== token) {
+                // 校验管理员令牌是否与 USER.adm 匹配（使用宽松比较以兼容类型差异）
+                if (!user.adm || user.adm != token) {
                     showError('管理员令牌错误');
                     loginBtn.disabled = false;
                     loginBtn.textContent = '验证身份';
                     return;
                 }
 
-                // 验证通过，保存管理员状态
+                // 验证通过，保存管理员状态（使用服务端返回的 JWT）
                 sessionStorage.setItem('admin_logged_in', 'true');
-                sessionStorage.setItem('admin_token', token);
-                sessionStorage.setItem('admin_email', user.email || email);
+                sessionStorage.setItem('admin_token', data.token);
+                sessionStorage.setItem('admin_email', data.email || email);
 
                 showError('');
                 window.location.href = '/admin-review.html';
