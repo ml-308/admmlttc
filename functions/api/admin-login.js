@@ -62,8 +62,8 @@ export async function onRequestPost({ request, env }) {
       });
     }
 
-    // 验证管理员权限：adm 不为 'user' 即为管理员，adm 列的值即管理令牌
-    if (!user.adm || user.adm === 'user') {
+    // 验证管理员权限
+    if (!user.adm || user.adm !== 1) {
       return new Response(JSON.stringify({ success: false, message: '无管理员权限' }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' }
