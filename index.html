@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style/timetable.css">
     <script src="lib/ui/init.mjs" type="module"></script>
     <script src="/src/auth-header.js" type="module"></script>
-        <!-- Cloudflare Web Analytics -->
+    <!-- Cloudflare Web Analytics -->
     <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
         data-cf-beacon='{"token": "db1de41e202d4b7fbcc030454b8f6a75"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -97,7 +97,15 @@
                 // 第二步：获取用户档案，校验管理员令牌
                 const profileRes = await fetch('/api/profile', { credentials: 'include' });
                 if (!profileRes.ok) {
-                    showError(`获取用户信息失败 (${profileRes.status}): ${errorText}`);
+                    // 安全地提取错误详情
+                    let errorInfo = '';
+                    try {
+                        const errorBody = await profileRes.clone().json();
+                        errorInfo = JSON.stringify(errorBody);
+                    } catch {
+                        errorInfo = await profileRes.clone().text();
+                    }
+                    showError(`获取用户信息失败 (${profileRes.status}): ${errorInfo}`);
                     loginBtn.disabled = false;
                     loginBtn.textContent = '验证身份';
                     return;
@@ -120,14 +128,14 @@
 
                 showError('');
                 window.location.href = '/admin-review.html';
-            }catch (e) {
-    let msg = '网络错误';
-    if (e && e.message) msg += `: ${e.message}`;
-    else if (e) msg += `: ${String(e)}`;
-    showError(msg);
-    loginBtn.disabled = false;
-    loginBtn.textContent = '验证身份';
-}
+            } catch (e) {
+                let msg = '网络错误';
+                if (e && e.message) msg += `: ${e.message}`;
+                else if (e) msg += `: ${String(e)}`;
+                showError(msg);
+                loginBtn.disabled = false;
+                loginBtn.textContent = '验证身份';
+            }
         }
 
         function showError(msg) {
