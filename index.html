@@ -94,10 +94,17 @@
                     return;
                 }
 
+                // 保存 JWT 到 sessionStorage（后续用 Authorization 头发送，绕开 Safari Cookie 限制）
+                sessionStorage.setItem('admin_token', data.token);
+                sessionStorage.setItem('admin_email', data.email || email);
+
                 // 第二步：获取用户档案，校验管理员令牌
-                const profileRes = await fetch('/api/profile', { credentials: 'include' });
+                const adminToken = sessionStorage.getItem('admin_token');
+                const profileRes = await fetch('/api/profile', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+
                 if (!profileRes.ok) {
-                    // 安全地提取错误详情
                     let errorInfo = '';
                     try {
                         const errorBody = await profileRes.clone().json();
@@ -110,6 +117,7 @@
                     loginBtn.textContent = '验证身份';
                     return;
                 }
+
                 const profileData = await profileRes.json();
                 const user = profileData.user || profileData;
 
@@ -121,10 +129,8 @@
                     return;
                 }
 
-                // 验证通过，保存管理员状态（使用服务端返回的 JWT）
+                // 验证通过，保存管理员登录状态
                 sessionStorage.setItem('admin_logged_in', 'true');
-                sessionStorage.setItem('admin_token', data.token);
-                sessionStorage.setItem('admin_email', data.email || email);
 
                 showError('');
                 window.location.href = '/admin-review.html';

@@ -1,8 +1,11 @@
 // functions/api/admin-login.js
-import { signToken } from '../auth';
+import { signToken, setAuthCookie } from '../auth';
 
-// 密码验证函数（与注册时的 hashPassword 配对使用）
+// 密码验证函数（增强防御）
 async function verifyPassword(password, storedValue) {
+  if (!storedValue || typeof storedValue !== 'string' || !storedValue.includes(':')) {
+    return false;
+  }
   const [saltHex, originalHashHex] = storedValue.split(':');
   if (!saltHex || !originalHashHex) return false;
 
@@ -32,22 +35,31 @@ async function verifyPassword(password, storedValue) {
 
 const ADMIN_TOKEN_EXPIRY = 259200; // 3天（秒）
 
+// 统一设置 CORS 凭据头
+function setCorsHeaders(response) {
+  response.headers.set('Access-Control-Allow-Origin', 'https://mlttc.bond');
+  response.headers.set('Access-Control-Allow-Credentials', 'true');
+  return response;
+}
+
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json().catch(() => null);
     if (!body) {
-      return new Response(JSON.stringify({ success: false, message: '无效的请求数据' }), {
+      const response = new Response(JSON.stringify({ success: false, message: '无效的请求数据' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
+      return setCorsHeaders(response);
     }
 
     const { email, password } = body;
     if (!email || !password) {
-      return new Response(JSON.stringify({ success: false, message: '账号和密码不能为空' }), {
+      const response = new Response(JSON.stringify({ success: false, message: '账号和密码不能为空' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
+      return setCorsHeaders(response);
     }
 
     // 支持邮箱或昵称登录
@@ -64,27 +76,30 @@ export async function onRequestPost({ request, env }) {
     }
 
     if (!user) {
-      return new Response(JSON.stringify({ success: false, message: '管理员账号或密码错误' }), {
+      const response = new Response(JSON.stringify({ success: false, message: '管理员账号或密码错误' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
+      return setCorsHeaders(response);
     }
 
-    // 验证管理员权限：adm 不为 'user' 即为管理员，adm 列的值即管理令牌
+    // 验证管理员权限：adm 不为 'user' 即为管理员
     if (!user.adm || user.adm === 'user') {
-      return new Response(JSON.stringify({ success: false, message: '无管理员权限' }), {
+      const response = new Response(JSON.stringify({ success: false, message: '无管理员权限' }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' }
       });
+      return setCorsHeaders(response);
     }
 
     // 验证密码
     const isPasswordValid = await verifyPassword(password, user.password);
     if (!isPasswordValid) {
-      return new Response(JSON.stringify({ success: false, message: '管理员账号或密码错误' }), {
+      const response = new Response(JSON.stringify({ success: false, message: '管理员账号或密码错误' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
+      return setCorsHeaders(response);
     }
 
     // 生成 JWT（3天过期）
@@ -94,21 +109,30 @@ export async function onRequestPost({ request, env }) {
       ADMIN_TOKEN_EXPIRY
     );
 
-    return new Response(JSON.stringify({
+    // 构建成功响应
+    const successBody = JSON.stringify({
       success: true,
       token,
       email: user.email,
       name: user.NAME,
       message: '管理员登录成功'
-    }), {
+    });
+
+    const response = new Response(successBody, {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
+
+    // 设置 httpOnly Cookie（兼容其他可能依赖 Cookie 的页面）
+    setAuthCookie(response, token);
+
+    return setCorsHeaders(response);
   } catch (error) {
     console.error('管理员登录错误:', error);
-    return new Response(JSON.stringify({ success: false, message: '服务器错误' }), {
+    const response = new Response(JSON.stringify({ success: false, message: '服务器错误' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
+    return setCorsHeaders(response);
   }
 }
