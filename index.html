@@ -120,11 +120,14 @@
 
                 showError('');
                 window.location.href = '/admin-review.html';
-            } catch (e) {
-                showError(`网络错误: ${e.message || e}`);
-                loginBtn.disabled = false;
-                loginBtn.textContent = '验证身份';
-            }
+            }catch (e) {
+    let msg = '网络错误';
+    if (e && e.message) msg += `: ${e.message}`;
+    else if (e) msg += `: ${String(e)}`;
+    showError(msg);
+    loginBtn.disabled = false;
+    loginBtn.textContent = '验证身份';
+}
         }
 
         function showError(msg) {
