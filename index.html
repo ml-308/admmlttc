@@ -97,7 +97,7 @@
                 // 第二步：获取用户档案，校验管理员令牌
                 const profileRes = await fetch('/api/profile', { credentials: 'include' });
                 if (!profileRes.ok) {
-                    showError('无法获取用户信息');
+                    showError(`获取用户信息失败 (${profileRes.status}): ${errorText}`);
                     loginBtn.disabled = false;
                     loginBtn.textContent = '验证身份';
                     return;
