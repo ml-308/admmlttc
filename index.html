@@ -121,7 +121,7 @@
                 showError('');
                 window.location.href = '/admin-review.html';
             } catch (e) {
-                showError('网络错误，请稍后重试');
+                showError(`网络错误: ${e.message || e}`);
                 loginBtn.disabled = false;
                 loginBtn.textContent = '验证身份';
             }
