@@ -106,7 +106,7 @@ export async function onRequestPost({ request, env }) {
     });
   } catch (error) {
     console.error('管理员登录错误:', error);
-    return new Response(JSON.stringify({ success: false, message: '服务器错误' }), {
+    return new Response(JSON.stringify({ success: false, message: '服务器错误' ,debug:eeror.stack}), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
