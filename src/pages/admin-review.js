@@ -164,8 +164,8 @@ async function rejectItem(item) {
 }
 
 async function deleteItem(item) {
-  if (!confirm(`确认永久删除时刻表 #${item.ID}？此操作不可撤销。`)) return;
-  if (!confirm(`再次确认：删除 ${item.CITY} ${item.WAY}？`)) return;
+  if (!confirm(`确认删除时刻表 #${item.ID}？作者将收到删除通知。`)) return;
+  if (!confirm(`再次确认：标记删除 ${item.CITY} ${item.WAY}？`)) return;
   try {
     const res = await fetch('/api/admin', {
       method: 'DELETE',
@@ -181,7 +181,7 @@ async function deleteItem(item) {
       updateSection('rejected', true);
       updateSection('reviewed', false);
     }
-    showMessage('已删除', false);
+    showMessage('已删除（已通知作者）', false);
   } catch { showMessage('网络错误', true); }
 }
 
