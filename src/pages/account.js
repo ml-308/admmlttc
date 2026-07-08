@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── 我的时刻表 - 分页与渲染 ─────────────────────
   // 卡片含2个操作按钮，每页3条可完整显示
-  const PAGE_SIZE = 3;
+  const PAGE_SIZE = 2;
   let myTimetables = [];
   let myCurrentPage = 0;
 
@@ -249,16 +249,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cached && cached.email === email && Array.isArray(cached.data)) {
       // 缓存命中，直接使用
       myTimetables = cached.data;
-      // 排序：已通过 > 待审核 > 被驳回 > 已被管理员删除（缓存数据重新排序）
-      myTimetables.sort((a, b) => {
-        const score = (item) => {
-          if (item.PASS == true) return 3;
-          if (item.SPECIAL && item.SPECIAL.includes('【时刻表被管理员删除】')) return 0;
-          if (item.SPECIAL && item.SPECIAL.includes('【时刻表被驳回】')) return 1;
-          return 2;
-        };
-        return score(b) - score(a);
-      });
+      // 已通过优先排序
+      myTimetables.sort((a, b) => (b.PASS == true ? 1 : 0) - (a.PASS == true ? 1 : 0));
       myCurrentPage = 0;
       ttLoading.classList.add('hidden');
 
@@ -291,16 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       myTimetables = json.data || [];
-      // 排序：已通过 > 待审核 > 被驳回 > 已被管理员删除
-      myTimetables.sort((a, b) => {
-        const score = (item) => {
-          if (item.PASS == true) return 3;
-          if (item.SPECIAL && item.SPECIAL.includes('【时刻表被管理员删除】')) return 0;
-          if (item.SPECIAL && item.SPECIAL.includes('【时刻表被驳回】')) return 1;
-          return 2;
-        };
-        return score(b) - score(a);
-      });
+      // 已通过优先排序
+      myTimetables.sort((a, b) => (b.PASS == true ? 1 : 0) - (a.PASS == true ? 1 : 0));
       myCurrentPage = 0;
 
       // 写入缓存
@@ -364,12 +348,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <span>写入: ${item.WRITETIME || '未知'}</span>
             <span style="font-weight:600; ${
               item.PASS == true ? 'color:var(--success);' :
-              (item.SPECIAL && item.SPECIAL.includes('【时刻表被管理员删除】')) ? 'color:var(--text-muted);' :
               (item.SPECIAL && item.SPECIAL.includes('【时刻表被驳回】')) ? 'color:var(--danger);' :
               'color:var(--warning);'
             }">${
               item.PASS == true ? '已通过' :
-              (item.SPECIAL && item.SPECIAL.includes('【时刻表被管理员删除】')) ? '已被管理员删除' :
               (item.SPECIAL && item.SPECIAL.includes('【时刻表被驳回】')) ? '被驳回' :
               '待审核'
             }</span>
@@ -382,28 +364,30 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       const isRejected = item.SPECIAL && item.SPECIAL.includes('【时刻表被驳回】');
-      const isAdminDeleted = item.SPECIAL && item.SPECIAL.includes('【时刻表被管理员删除】');
 
       // 查看详情按钮
       card.querySelector('.detail-btn').addEventListener('click', (e) => {
         e.stopPropagation();
-        window.location.href = `/timetable-detail-result.html?id=${encodeURIComponent(item.ID)}`;
+        // 被驳回的时刻表：查看后删除
+        if (isRejected) {
+          if (confirm('该时刻表已被管理员驳回，查看后将自动删除。确定查看？')) {
+            fetch('/api/admin', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: item.ID })
+            }).catch(() => {});
+            window.location.href = `/timetable-detail-result.html?id=${encodeURIComponent(item.ID)}`;
+          }
+        } else {
+          window.location.href = `/timetable-detail-result.html?id=${encodeURIComponent(item.ID)}`;
+        }
       });
 
-      // 修改时刻表按钮：被驳回的提供修改入口，被管理员删除的不可操作
-      if (isAdminDeleted) {
+      // 修改时刻表按钮（被驳回的不可修改）
+      if (isRejected) {
         card.querySelector('.edit-btn').disabled = true;
         card.querySelector('.edit-btn').style.opacity = '0.4';
-        card.querySelector('.edit-btn').textContent = '已被删除';
-        // 详情按钮也禁用
-        card.querySelector('.detail-btn').disabled = true;
-        card.querySelector('.detail-btn').style.opacity = '0.4';
-      } else if (isRejected) {
-        // 被驳回的时刻表：提供修改按钮
-        card.querySelector('.edit-btn').addEventListener('click', (e) => {
-          e.stopPropagation();
-          window.location.href = `/timetable-result.html?id=${encodeURIComponent(item.ID)}`;
-        });
+        card.querySelector('.edit-btn').textContent = '已驳回';
       } else {
         card.querySelector('.edit-btn').addEventListener('click', (e) => {
           e.stopPropagation();

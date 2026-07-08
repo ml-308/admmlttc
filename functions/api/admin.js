@@ -17,10 +17,6 @@ export async function onRequestGet({ request, env }) {
     const reviewed = [];
 
     for (const row of results) {
-      // 过滤掉"被管理员删除"的记录（不在管理员面板显示）
-      if (row.SPECIAL && row.SPECIAL.includes('【时刻表被管理员删除】')) {
-        continue;
-      }
       if (row.PASS === 1) {
         reviewed.push(row);
       } else if (row.SPECIAL && row.SPECIAL.includes('【时刻表被驳回】')) {
@@ -115,7 +111,7 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
-// ─── DELETE: 标记时刻表为"被管理员删除"（保留记录以通知作者）───
+// ─── DELETE: 删除时刻表 ─────────────────────────
 export async function onRequestDelete({ request, env }) {
   try {
     const body = await request.json().catch(() => null);
@@ -126,31 +122,17 @@ export async function onRequestDelete({ request, env }) {
       });
     }
 
-    // 先获取记录，确认存在并获取作者信息
-    const existing = await env.mlttcd.prepare(
-      'SELECT SPECIAL, WRITER FROM TIMETABLE WHERE ID = ?'
-    ).bind(id).first();
+    const result = await env.mlttcd.prepare(
+      'DELETE FROM TIMETABLE WHERE ID = ?'
+    ).bind(id).run();
 
-    if (!existing) {
+    if (!result.meta || result.meta.changes === 0) {
       return new Response(JSON.stringify({ message: '记录不存在' }), {
         status: 404, headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // 标记为"被管理员删除"而非真正删除，以便作者能收到通知
-    const newSpecial = existing.SPECIAL && existing.SPECIAL !== '无'
-      ? existing.SPECIAL + '【时刻表被管理员删除】'
-      : '【时刻表被管理员删除】';
-
-    await env.mlttcd.prepare(
-      'UPDATE TIMETABLE SET SPECIAL = ?, PASS = 0 WHERE ID = ?'
-    ).bind(newSpecial, id).run();
-
-    return new Response(JSON.stringify({
-      success: true,
-      message: '已删除（已通知作者）',
-      writer: existing.WRITER
-    }), {
+    return new Response(JSON.stringify({ success: true, message: '已删除' }), {
       status: 200, headers: { 'Content-Type': 'application/json' }
     });
   } catch (err) {
