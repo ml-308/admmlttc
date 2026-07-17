@@ -1205,3 +1205,126 @@ footer::before {
     font-size: 2rem;
     opacity: 0.6;
 }
+
+/* ── 深色模式：菜单按钮 ── */
+[data-theme="dark"] .menu-btn {
+    background: rgba(50, 52, 55, 0.6) !important;
+    color: #e0e0e0 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .menu-btn:hover {
+    background: rgba(60, 62, 65, 0.8) !important;
+    color: #ffffff !important;
+    border-color: rgba(0, 117, 242, 0.4) !important;
+}
+
+/* ── 深色模式：表单面板与表单组 ── */
+[data-theme="dark"] .form-group label {
+    color: #ccc;
+}
+
+[data-theme="dark"] .form-group [name="time1"],
+[data-theme="dark"] .form-group [name="time2"] {
+    background: rgba(50, 52, 55, 0.6);
+    color: #e0e0e0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .form-group [name="time1"]:focus,
+[data-theme="dark"] .form-group [name="time2"]:focus {
+    border-color: var(--primary);
+    background: rgba(55, 57, 60, 0.7);
+}
+
+/* ── 深色模式：结果卡片 ── */
+[data-theme="dark"] .result-card {
+    background: rgba(40, 42, 45, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #d0d0d0;
+}
+
+[data-theme="dark"] .result-card strong {
+    color: #f0f0f0;
+}
+
+[data-theme="dark"] .result-card code,
+[data-theme="dark"] .result-card .id-highlight {
+    background: rgba(255, 255, 255, 0.06);
+    color: #e0e0e0;
+}
+
+/* ── 深色模式：分页栏 ── */
+[data-theme="dark"] .pagination-bar {
+    color: #bbb;
+}
+
+[data-theme="dark"] .pagination-bar hcw-button,
+[data-theme="dark"] .pagination-bar button {
+    background: rgba(50, 52, 55, 0.6) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .pagination-bar hcw-button:hover,
+[data-theme="dark"] .pagination-bar button:hover {
+    background: rgba(60, 62, 65, 0.8) !important;
+    color: #ffffff !important;
+    border-color: rgba(0, 117, 242, 0.4) !important;
+}
+
+[data-theme="dark"] .pagination-bar hcw-button:disabled,
+[data-theme="dark"] .pagination-bar button:disabled {
+    opacity: 0.3 !important;
+    background: rgba(40, 42, 45, 0.4) !important;
+    border-color: transparent !important;
+}
+
+/* ── 深色模式：空结果状态 ── */
+[data-theme="dark"] .result-empty {
+    color: #888;
+}
+
+[data-theme="dark"] .result-empty::before {
+    opacity: 0.35;
+}
+
+/* ── 深色模式：表单错误提示 ── */
+[data-theme="dark"] .lp {
+    color: #bbb;
+}
+
+[data-theme="dark"] .lp.lp-valid {
+    color: #5ddb8d !important;
+}
+
+[data-theme="dark"] .lp.lp-invalid {
+    color: #ff6666 !important;
+}
+
+[data-theme="dark"] .lp.lp-warning {
+    color: #e8b04a !important;
+}
+
+/* ── 深色模式：验证按钮组 ── */
+[data-theme="dark"] .validation-btn-group hcw-button {
+    background: rgba(50, 52, 55, 0.6) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .validation-btn-group hcw-button:hover {
+    background: rgba(60, 62, 65, 0.8) !important;
+    color: #ffffff !important;
+}
+
+/* ── 深色模式：结果项操作按钮 ── */
+[data-theme="dark"] .result-item-actions {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ── 深色模式：页脚 ── */
+[data-theme="dark"] footer {
+    border-top-color: rgba(255, 255, 255, 0.06);
+    background: rgba(26, 28, 30, 0.9);
+}

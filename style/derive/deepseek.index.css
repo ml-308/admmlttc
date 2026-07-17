@@ -63,3 +63,42 @@
 [data-theme="dark"] .error-msg {
     background: rgba(180, 40, 40, 0.25);
 }
+
+/* ── 深色模式：管理员面板按钮 ── */
+[data-theme="dark"] .dashboard-btn {
+    background: rgba(50, 52, 55, 0.7) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .dashboard-btn:hover {
+    background: rgba(60, 62, 65, 0.85) !important;
+    color: #ffffff !important;
+    border-color: rgba(0, 117, 242, 0.5) !important;
+    box-shadow: 0 0 16px rgba(0, 117, 242, 0.12);
+}
+
+[data-theme="dark"] .dashboard-btn[primary] {
+    background: rgba(0, 117, 242, 0.2) !important;
+    border-color: rgba(0, 117, 242, 0.3) !important;
+}
+
+[data-theme="dark"] .dashboard-btn[primary]:hover {
+    background: rgba(0, 117, 242, 0.3) !important;
+    border-color: rgba(0, 117, 242, 0.5) !important;
+}
+
+[data-theme="dark"] .dashboard-btn:disabled {
+    opacity: 0.35 !important;
+    background: rgba(40, 42, 45, 0.5) !important;
+    border-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* ── 深色模式：管理员信息卡片 ── */
+[data-theme="dark"] #profileCard {
+    background: rgba(40, 42, 45, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
