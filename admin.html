@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>管理员面板</title>
+    <link rel="stylesheet" href="style/index.css">
+    <link rel="stylesheet" href="style/timetable.css">
+    <script src="lib/ui/init.mjs" type="module"></script>
+    <script src="/src/auth-header.js" type="module"></script>
+</head>
+
+<body>
+    <hcw-body-header>
+        <hcw-button flat fill style="min-width: 5rem;" id="backBtn">返回首页</hcw-button>
+        <div class="logo-area">
+            <div class="logo-text">MLTTC - 管理员面板</div>
+        </div>
+        <p hidden-on-mobile style="margin-left: auto; color: var(--text-muted)">管理员主页</p>
+        <div id="headerAuthArea">
+            <hcw-button id="themeToggleBtn" flat icon large aria-label="切换主题">主题</hcw-button>
+            <span style="font-size:0.82rem; color:var(--text-muted);" id="adminEmailDisplay"></span>
+            <hcw-button id="logoutBtn" flat style="min-width: 4rem; font-size:0.82rem;">退出</hcw-button>
+        </div>
+    </hcw-body-header>
+
+    <hcw-article>
+        <!-- 管理员个人信息卡片 -->
+        <hcw-card id="profileCard">
+            <hcw-card-title style="font-size: 1.1rem; display:flex; align-items:center; gap:8px;">
+                <span>管理员信息</span>
+            </hcw-card-title>
+            <div id="profileLoading" style="text-align:center; padding:1rem 0; color:var(--text-muted);">加载中...</div>
+            <div id="profileContent" class="hidden" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:0.5rem;">
+                <div style="flex:1; min-width:120px;">
+                    <span style="font-size:0.78rem; color:var(--text-muted);">昵称</span>
+                    <div style="font-size:1rem; font-weight:600;" id="profileName">—</div>
+                </div>
+                <div style="flex:1; min-width:180px;">
+                    <span style="font-size:0.78rem; color:var(--text-muted);">邮箱</span>
+                    <div style="font-size:1rem;" id="profileEmail">—</div>
+                </div>
+                <div style="flex:1; min-width:100px;">
+                    <span style="font-size:0.78rem; color:var(--text-muted);">身份</span>
+                    <div style="font-size:1rem; font-weight:600; color:var(--success);" id="profileRole">管理员</div>
+                </div>
+            </div>
+            <div id="profileError" class="hidden" style="text-align:center; padding:1rem 0; color:var(--danger); font-size:0.85rem;">加载失败</div>
+        </hcw-card>
+
+        <!-- 6 大功能按钮 -->
+        <hcw-card style="margin-top:1.5rem;">
+            <hcw-card-title style="font-size: 1.1rem;">功能菜单</hcw-card-title>
+            <div class="admin-dashboard-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:1rem; margin-top:0.5rem;">
+                <hcw-button class="dashboard-btn" primary flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;" data-href="/admin-review.html">
+                    <span>时刻表审核</span>
+                </hcw-button>
+                <hcw-button class="dashboard-btn" flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;" data-href="/admin-users.html">
+                    <span>用户信息</span>
+                </hcw-button>
+                <hcw-button class="dashboard-btn" disabled flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; opacity:0.5;">
+                    <span>系统设置</span>
+                </hcw-button>
+                <hcw-button class="dashboard-btn" disabled flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; opacity:0.5;">
+                    <span>数据统计</span>
+                </hcw-button>
+                <hcw-button class="dashboard-btn" disabled flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; opacity:0.5;">
+                    <span>线路管理</span>
+                </hcw-button>
+                <hcw-button class="dashboard-btn" disabled flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; opacity:0.5;">
+                    <span>日志记录</span>
+                </hcw-button>
+            </div>
+        </hcw-card>
+    </hcw-article>
+
+    <hcw-body-footer></hcw-body-footer>
+
+    <script src="/src/pages/admin.js" type="module"></script>
+</body>
+
+</html>

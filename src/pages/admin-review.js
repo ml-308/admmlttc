@@ -326,7 +326,7 @@ function changePage(key, delta) {
 }
 
 // ─── 事件绑定 ────────────────────────────────
-backBtn.addEventListener('click', () => window.location.href = '/index.html');
+backBtn.addEventListener('click', () => window.location.href = '/admin.html');
 
 logoutBtn.addEventListener('click', () => {
   sessionStorage.removeItem('admin_logged_in');

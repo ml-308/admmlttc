@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (v.length > 6) {
         msgout(nameInput, nameMsg, '昵称不能超过6个字符', 0);
       } else if (v.length > 0) {
-        msgout(nameInput, nameMsg, '✓ 昵称格式正确', 1);
+        msgout(nameInput, nameMsg, '昵称格式正确', 1);
       } else {
         msgout(nameInput, nameMsg, '', 2);
       }
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (v.length > 6) {
         msgout(cityInput, cityMsg, '城市名不能超过6个字符', 0);
       } else if (v.length > 0) {
-        msgout(cityInput, cityMsg, '✓ 城市名格式正确', 1);
+        msgout(cityInput, cityMsg, '城市名格式正确', 1);
       } else {
         msgout(cityInput, cityMsg, '', 2);
       }

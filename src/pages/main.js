@@ -37,7 +37,7 @@ function updateCountdown() {
   const diff = targetDate - now;
 
   if (diff <= 0) {
-    timer.textContent = '🎉 高考已开始！';
+    timer.textContent = '高考已开始！';
     return;
   }
 

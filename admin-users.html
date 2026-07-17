@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>管理员 - 用户信息</title>
+    <link rel="stylesheet" href="style/index.css">
+    <link rel="stylesheet" href="style/timetable.css">
+    <script src="lib/ui/init.mjs" type="module"></script>
+    <script src="/src/auth-header.js" type="module"></script>
+</head>
+
+<body>
+    <hcw-body-header>
+        <hcw-button flat fill style="min-width: 5rem;" id="backBtn">返回面板</hcw-button>
+        <div class="logo-area">
+            <div class="logo-text">MLTTC - 用户信息</div>
+        </div>
+        <p hidden-on-mobile style="margin-left: auto; color: var(--text-muted)">管理员面板</p>
+        <div id="headerAuthArea">
+            <hcw-button id="themeToggleBtn" flat icon large aria-label="切换主题">主题</hcw-button>
+            <span style="font-size:0.82rem; color:var(--text-muted);" id="adminEmailDisplay"></span>
+            <hcw-button id="logoutBtn" flat style="min-width: 4rem; font-size:0.82rem;">退出</hcw-button>
+        </div>
+    </hcw-body-header>
+
+    <hcw-article>
+        <hcw-card>
+            <hcw-card-title style="font-size: 1.1rem; display:flex; align-items:center; justify-content:space-between;">
+                <span>用户列表</span>
+                <span id="userCount" style="font-size:0.82rem; color:var(--text-muted);">0 人</span>
+            </hcw-card-title>
+            <div id="userLoading" style="text-align:center; padding:2rem 0; color:var(--text-muted);">加载中...</div>
+            <div id="userError" class="hidden" style="text-align:center; padding:2rem 0; color:var(--danger);">
+                加载失败
+                <hcw-button id="retryBtn" flat style="min-width:4rem; font-size:0.82rem; margin-top:0.5rem;">重试</hcw-button>
+            </div>
+            <div id="userEmpty" class="hidden" style="text-align:center; padding:2rem 0; color:var(--text-muted);">暂无用户</div>
+            <div id="userListWrapper" class="hidden" style="margin-top:0.5rem;">
+                <div style="display:flex; flex-direction:column; gap:0.5rem;" id="userList"></div>
+                <div id="userPagination" class="pagination-bar hidden" style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px;">
+                    <hcw-button id="userPrevBtn" flat style="min-width:4rem; font-size:0.82rem;">上一页</hcw-button>
+                    <span id="userPageInfo" style="font-size:0.82rem; color:var(--text-muted);">0/0</span>
+                    <hcw-button id="userNextBtn" flat style="min-width:4rem; font-size:0.82rem;">下一页</hcw-button>
+                </div>
+            </div>
+        </hcw-card>
+    </hcw-article>
+
+    <hcw-body-footer></hcw-body-footer>
+
+    <script src="/src/pages/admin-users.js" type="module"></script>
+</body>
+
+</html>

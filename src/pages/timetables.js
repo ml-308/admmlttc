@@ -1221,7 +1221,7 @@ function showDeleteResult(success, message) {
     
     deleteResultDiv.classList.remove('hidden', 'success', 'error');
     deleteResultDiv.classList.add(success ? 'success' : 'error');
-    deleteResultDiv.innerHTML = `<p><strong>${success ? '✓' : '✗'} ${message}</strong></p>`;
+    deleteResultDiv.innerHTML = `<p><strong>${success ? 'OK ' : '失败 '}${message}</strong></p>`;
     
     setTimeout(() => {
         deleteResultDiv.classList.add('hidden');
