@@ -102,3 +102,67 @@
     background: rgba(40, 42, 45, 0.85) !important;
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* ── 深色模式：用户列表卡片 ── */
+[data-theme="dark"] #userList .result-item {
+    background: rgba(40, 42, 45, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] #userList .result-item:hover {
+    border-color: rgba(0, 117, 242, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 117, 242, 0.08);
+}
+
+[data-theme="dark"] #userList .result-item-header {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] #userList .result-item-id {
+    color: #bbb;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] #userList .result-item-route {
+    color: #fff;
+}
+
+[data-theme="dark"] #userList .result-item-meta {
+    border-top-color: rgba(255, 255, 255, 0.08);
+    color: #bbb;
+}
+
+/* ── 深色模式：用户列表分页 ── */
+[data-theme="dark"] #userPagination hcw-button {
+    background: rgba(50, 52, 55, 0.6) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] #userPagination hcw-button:hover {
+    background: rgba(60, 62, 65, 0.8) !important;
+    color: #ffffff !important;
+    border-color: rgba(0, 117, 242, 0.4) !important;
+}
+
+[data-theme="dark"] #userPagination hcw-button:disabled {
+    opacity: 0.3 !important;
+    background: rgba(40, 42, 45, 0.4) !important;
+    border-color: transparent !important;
+}
+
+[data-theme="dark"] #userPageInfo {
+    color: #bbb;
+}
+
+/* ── 深色模式：用户列表空状态与加载/错误 ── */
+[data-theme="dark"] #userEmpty,
+[data-theme="dark"] #userLoading {
+    color: #888;
+}
+
+[data-theme="dark"] #userError {
+    color: #ff6666;
+}
