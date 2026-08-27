@@ -27,47 +27,91 @@
     </hcw-body-header>
 
     <hcw-article>
-        <!-- 审核入口按钮 -->
-        <div class="menu-bar" id="reviewEntrance">
-            <hcw-button id="loadReviewBtn" primary flat style="min-width: 12rem; font-size:1rem;">
-                加载时刻表审核
-            </hcw-button>
-        </div>
+        <!-- 时刻表审核页面：审核入口按钮 + 已审核时刻表 -->
+        <div id="reviewEntrance">
+            <div class="menu-bar">
+                <hcw-button id="startReviewBtn" primary flat style="min-width: 12rem; font-size:1rem;">
+                    审核时刻表
+                </hcw-button>
+            </div>
 
-        <!-- 审核面板 -->
-        <div id="reviewPanel" class="form-panel hidden">
-
-            <!-- 未审核时刻表 -->
-            <hcw-card>
-                <hcw-card-title style="font-size: 1.1rem; display:flex; align-items:center; justify-content:space-between;">
-                    <span>未审核时刻表</span>
-                    <span id="unreviewedCount" style="font-size:0.82rem; color:var(--text-muted);">0 条</span>
-                </hcw-card-title>
-                <div id="unreviewedLoading" style="text-align:center; padding:2rem 0; color:var(--text-muted);">加载中...</div>
-                <div id="unreviewedEmpty" class="hidden" style="text-align:center; padding:2rem 0; color:var(--text-muted);">暂无未审核时刻表</div>
-                <div id="unreviewedList" class="result-area result-list" style="margin-top:0.5rem;"></div>
-                <div id="unreviewedPagination" class="pagination-bar hidden" style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px;">
-                    <hcw-button id="unreviewedPrevBtn" flat style="min-width:4rem; font-size:0.82rem;">上一页</hcw-button>
-                    <span id="unreviewedPageInfo" style="font-size:0.82rem; color:var(--text-muted);">0/0</span>
-                    <hcw-button id="unreviewedNextBtn" flat style="min-width:4rem; font-size:0.82rem;">下一页</hcw-button>
-                </div>
-            </hcw-card>
-
-            <!-- 已审核时刻表 -->
-            <hcw-card>
-                <hcw-card-title style="font-size: 1.1rem; display:flex; align-items:center; justify-content:space-between;">
+            <!-- 已审核时刻表（卡片 + 删除按钮） -->
+            <hcw-card style="margin-top:1.5rem;">
+                <hcw-card-title style="font-size:1.1rem; display:flex; align-items:center; justify-content:space-between;">
                     <span style="color:var(--success);">已审核时刻表</span>
                     <span id="reviewedCount" style="font-size:0.82rem; color:var(--text-muted);">0 条</span>
                 </hcw-card-title>
                 <div id="reviewedLoading" style="text-align:center; padding:2rem 0; color:var(--text-muted);">加载中...</div>
                 <div id="reviewedEmpty" class="hidden" style="text-align:center; padding:2rem 0; color:var(--text-muted);">暂无已审核时刻表</div>
                 <div id="reviewedList" class="result-area result-list" style="margin-top:0.5rem;"></div>
-                <div id="reviewedPagination" class="pagination-bar hidden" style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px;">
-                    <hcw-button id="reviewedPrevBtn" flat style="min-width:4rem; font-size:0.82rem;">上一页</hcw-button>
-                    <span id="reviewedPageInfo" style="font-size:0.82rem; color:var(--text-muted);">0/0</span>
-                    <hcw-button id="reviewedNextBtn" flat style="min-width:4rem; font-size:0.82rem;">下一页</hcw-button>
-                </div>
             </hcw-card>
+        </div>
+
+        <!-- 审核工作区：点击"审核时刻表"后逐条展示未审核时刻表 -->
+        <div id="reviewWorkArea" class="hidden">
+
+            <!-- 加载状态 -->
+            <div id="reviewLoading" class="detail-loading">加载中...</div>
+
+            <!-- 无待审核 / 全部处理完毕（可返回时刻表审核页面） -->
+            <div id="reviewEmpty" class="detail-loading hidden">
+                <p id="reviewEmptyText">暂无待审核时刻表</p>
+                <hcw-button id="reviewBackBtn" primary flat style="min-width: 8rem; margin-top: 1rem;">返回</hcw-button>
+            </div>
+
+            <!-- 单条待审核时刻表详情 -->
+            <div id="reviewCard" class="hidden">
+                <hcw-card>
+                    <hcw-card-title style="font-size:1.1rem; display:flex; align-items:center; justify-content:space-between;">
+                        <span>时刻表审核</span>
+                        <span id="reviewProgress" style="font-size:0.82rem; color:var(--text-muted);">0/0</span>
+                    </hcw-card-title>
+                    <div class="detail-info-grid" style="margin-top:0.5rem;">
+                        <div class="detail-info-item">
+                            <span class="detail-label">ID</span>
+                            <span class="detail-value" id="rvId">—</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">城市</span>
+                            <span class="detail-value" id="rvCity">—</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">线路</span>
+                            <span class="detail-value" id="rvWay">—</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">起点</span>
+                            <span class="detail-value" id="rvStart">—</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">终点</span>
+                            <span class="detail-value" id="rvEnd">—</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">执行时间</span>
+                            <span class="detail-value" id="rvStartTime">—</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">作者</span>
+                            <span class="detail-value" id="rvWriter">—</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">写入时间</span>
+                            <span class="detail-value" id="rvWriteTime">—</span>
+                        </div>
+                        <div class="detail-info-item full-width">
+                            <span class="detail-label">备注</span>
+                            <span class="detail-value" id="rvSpecial">—</span>
+                        </div>
+                    </div>
+                    <!-- 通过 / 驳回 操作按钮 -->
+                    <div style="display:flex; gap:1rem; justify-content:center; margin-top:1.25rem;">
+                        <hcw-button id="approveBtn" primary flat style="min-width:6rem;">通过</hcw-button>
+                        <hcw-button id="rejectBtn" variant="danger" flat style="min-width:6rem;">驳回</hcw-button>
+                    </div>
+                </hcw-card>
+            </div>
+
         </div>
     </hcw-article>
 

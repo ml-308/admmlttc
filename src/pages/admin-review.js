@@ -1,4 +1,4 @@
-// ─── 管理员时刻表审核页面 ─────────────────────────
+// ─── 管理员时刻表审核页面（逐条审核工作流） ───────────────
 
 // ─── JWT 解析辅助 ─────────────────────────────
 function parseJwtPayload(token) {
@@ -10,7 +10,6 @@ function parseJwtPayload(token) {
 
 // ─── 管理员 JWT 验证 ──────────────────────────
 (function checkAuth() {
-  // 清除可能残留的旧 sessionStorage 数据，防止与旧登录页形成重定向循环
   const token = sessionStorage.getItem('admin_token');
   if (!token) {
     sessionStorage.removeItem('admin_logged_in');
@@ -36,37 +35,40 @@ function parseJwtPayload(token) {
 // ─── DOM ────────────────────────────────────
 const backBtn = document.getElementById('backBtn');
 const logoutBtn = document.getElementById('logoutBtn');
-const loadBtn = document.getElementById('loadReviewBtn');
-const reviewPanel = document.getElementById('reviewPanel');
 
-const unreviewedList = document.getElementById('unreviewedList');
+const startReviewBtn = document.getElementById('startReviewBtn');
+const reviewEntrance = document.getElementById('reviewEntrance');
+const reviewWorkArea = document.getElementById('reviewWorkArea');
+const reviewLoading = document.getElementById('reviewLoading');
+const reviewEmpty = document.getElementById('reviewEmpty');
+const reviewEmptyText = document.getElementById('reviewEmptyText');
+const reviewBackBtn = document.getElementById('reviewBackBtn');
+const reviewCard = document.getElementById('reviewCard');
+const reviewProgress = document.getElementById('reviewProgress');
+const approveBtn = document.getElementById('approveBtn');
+const rejectBtn = document.getElementById('rejectBtn');
+
 const reviewedList = document.getElementById('reviewedList');
-const unreviewedLoading = document.getElementById('unreviewedLoading');
 const reviewedLoading = document.getElementById('reviewedLoading');
-const unreviewedEmpty = document.getElementById('unreviewedEmpty');
 const reviewedEmpty = document.getElementById('reviewedEmpty');
-const unreviewedCount = document.getElementById('unreviewedCount');
 const reviewedCount = document.getElementById('reviewedCount');
 
-// ─── 分页 DOM ───────────────────────────────
-const unreviewedPagination = document.getElementById('unreviewedPagination');
-const reviewedPagination = document.getElementById('reviewedPagination');
-const unreviewedPrevBtn = document.getElementById('unreviewedPrevBtn');
-const unreviewedNextBtn = document.getElementById('unreviewedNextBtn');
-const reviewedPrevBtn = document.getElementById('reviewedPrevBtn');
-const reviewedNextBtn = document.getElementById('reviewedNextBtn');
-const unreviewedPageInfo = document.getElementById('unreviewedPageInfo');
-const reviewedPageInfo = document.getElementById('reviewedPageInfo');
-
-const PAGE_SIZE = 2;
-
-// ─── 分页状态 ───────────────────────────────
-const pageState = {
-  unreviewed: { data: [], page: 0 },
-  reviewed: { data: [], page: 0 }
-};
+const rvId = document.getElementById('rvId');
+const rvCity = document.getElementById('rvCity');
+const rvWay = document.getElementById('rvWay');
+const rvStart = document.getElementById('rvStart');
+const rvEnd = document.getElementById('rvEnd');
+const rvSpecial = document.getElementById('rvSpecial');
+const rvStartTime = document.getElementById('rvStartTime');
+const rvWriter = document.getElementById('rvWriter');
+const rvWriteTime = document.getElementById('rvWriteTime');
 
 const adminEmail = sessionStorage.getItem('admin_email') || '';
+
+// ─── 审核队列状态 ────────────────────────────
+let reviewQueue = [];   // 待审核时刻表列表
+let reviewIndex = 0;    // 当前展示下标
+let processing = false; // 防止重复点击
 
 // ─── 工具 ────────────────────────────────────
 function showMessage(msg, isError) {
@@ -85,98 +87,55 @@ function showMessage(msg, isError) {
   }
 }
 
-function formatTimeShort(timeStr) {
-  if (!timeStr || timeStr === 'unknown') return '未知';
-  const parts = timeStr.split(/[\t\n\r]+/).filter(t => t.trim());
-  if (parts.length <= 4) return parts.join(' ');
-  return parts.slice(0, 4).join(' ') + '...';
+// ─── 渲染当前待审核时刻表详情 ────────────────
+function fillReviewItem(item) {
+  rvId.textContent = '#' + item.ID;
+  rvCity.textContent = item.CITY || '未知';
+  rvWay.textContent = item.WAY || '未知';
+  rvStart.textContent = item.START || '未知';
+  rvEnd.textContent = item.END || '未知';
+  rvSpecial.textContent = (item.SPECIAL && item.SPECIAL !== '无') ? item.SPECIAL : '无';
+  rvStartTime.textContent = (!item.STARTTIME || item.STARTTIME === '1000-1-1') ? '未知' : item.STARTTIME;
+  rvWriter.textContent = item.WRITER_NAME || item.WRITER || '未知';
+  rvWriteTime.textContent = item.WRITETIME || '未知';
 }
 
-// ─── 本地数据操作 ────────────────────────────
-function removeFromState(key, itemId) {
-  const idx = pageState[key].data.findIndex(d => d.ID === itemId);
-  if (idx !== -1) return pageState[key].data.splice(idx, 1)[0];
-  return null;
+function showReviewItem() {
+  reviewProgress.textContent = `第 ${reviewIndex + 1} 条 / 共 ${reviewQueue.length} 条`;
+  fillReviewItem(reviewQueue[reviewIndex]);
+  reviewLoading.classList.add('hidden');
+  reviewEmpty.classList.add('hidden');
+  reviewCard.classList.remove('hidden');
+  approveBtn.disabled = false;
+  rejectBtn.disabled = false;
 }
 
-function moveToState(key, item) {
-  pageState[key].data.unshift(item);
+function showEmpty(text) {
+  reviewLoading.classList.add('hidden');
+  reviewCard.classList.add('hidden');
+  reviewEmptyText.textContent = text;
+  reviewEmpty.classList.remove('hidden');
 }
 
-function updateSection(key, showActions) {
-  const countEl = key === 'unreviewed' ? unreviewedCount : reviewedCount;
-  countEl.textContent = pageState[key].data.length + ' 条';
-  renderPage(key, showActions);
+function backToEntrance() {
+  reviewWorkArea.classList.add('hidden');
+  reviewEntrance.classList.remove('hidden');
+  reviewLoading.textContent = '加载中...';
+  reviewLoading.classList.remove('hidden');
+  reviewEmpty.classList.add('hidden');
+  reviewCard.classList.add('hidden');
+  reviewQueue = [];
+  reviewIndex = 0;
+  processing = false;
+  // 审核后已审核列表可能变化，重新加载
+  loadReviewed();
 }
 
-// ─── 操作 ────────────────────────────────────
-async function approveItem(item) {
-  try {
-    const res = await fetch('/api/admin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.ID, passer: adminEmail, pass: 1 })
-    });
-    const data = await res.json();
-    if (!res.ok) { showMessage(data.error || '操作失败', true); return; }
-
-    // 本地移动：从未审核 → 已通过
-    const fromKey = removeFromState('unreviewed', item.ID) ? 'unreviewed' : null;
-    if (fromKey) {
-      const moved = { ...item, PASS: 1, PASSER: adminEmail || '管理员' };
-      moveToState('reviewed', moved);
-      updateSection(fromKey, fromKey !== 'reviewed');
-      updateSection('reviewed', false);
-    }
-    showMessage('已通过', false);
-  } catch { showMessage('网络错误', true); }
-}
-
-async function rejectItem(item) {
-  try {
-    const res = await fetch('/api/admin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.ID, passer: adminEmail, action: 'reject' })
-    });
-    if (!res.ok) { const d = await res.json().catch(()=>({})); showMessage(d.error || '操作失败', true); return; }
-
-    // 本地从未审核列表中移除（驳回后不再显示，直到用户修改后重新提交）
-    const removed = removeFromState('unreviewed', item.ID);
-    if (removed) {
-      updateSection('unreviewed', true);
-    }
-    showMessage('已驳回', false);
-  } catch { showMessage('网络错误', true); }
-}
-
-async function deleteItem(item) {
-  if (!confirm(`确认永久删除时刻表 #${item.ID}？此操作不可撤销。`)) return;
-  if (!confirm(`再次确认：删除 ${item.CITY} ${item.WAY}？`)) return;
-  try {
-    const res = await fetch('/api/admin', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.ID })
-    });
-    if (!res.ok) { const d = await res.json().catch(()=>({})); showMessage(d.message || d.error || '删除失败', true); return; }
-
-    // 本地删除
-    const removed = removeFromState('unreviewed', item.ID) || removeFromState('reviewed', item.ID);
-    if (removed) {
-      updateSection('unreviewed', true);
-      updateSection('reviewed', false);
-    }
-    showMessage('已删除', false);
-  } catch { showMessage('网络错误', true); }
-}
-
-// ─── 渲染 ────────────────────────────────────
-function createTimetableCard(item, isUnreviewed) {
+// ─── 已审核时刻表（卡片 + 删除按钮） ─────────
+function createReviewedCard(item) {
   const card = document.createElement('div');
   card.className = 'result-item';
   card.dataset.id = item.ID;
-
   card.innerHTML = `
     <div class="result-item-header">
       <span class="result-item-id">#${item.ID}</span>
@@ -195,137 +154,168 @@ function createTimetableCard(item, isUnreviewed) {
         <span>执行: ${(!item.STARTTIME || item.STARTTIME === '1000-1-1') ? '未知' : item.STARTTIME}</span>
         <span>作者: ${item.WRITER_NAME || item.WRITER || '未知'}</span>
         <span>写入: ${item.WRITETIME || '未知'}</span>
-        ${
-          item.PASS == true ? `<span>审核: ${item.PASSER || '管理员'}</span>` :
-          (item.SPECIAL === '时刻表被驳回') ? '<span style="color:var(--danger);">被驳回</span>' :
-          (item.SPECIAL && item.SPECIAL.includes('（已修改驳回）')) ? '<span style="color:#e67e22;">已修改驳回</span>' :
-          '<span style="color:var(--warning);">待审核</span>'
-        }
+        <span>审核: ${item.PASSER || '管理员'}</span>
       </div>
     </div>
-    <div class="result-item-actions" style="gap:6px; flex-wrap:wrap;">
-      ${isUnreviewed ? `
-        <hcw-button class="approve-btn" primary flat style="min-width:4rem; font-size:0.8rem;">通过</hcw-button>
-        <hcw-button class="reject-btn" variant="danger" flat style="min-width:4rem; font-size:0.8rem;">驳回</hcw-button>
-      ` : `<span style="font-size:0.78rem; color:var(--text-muted);">已审核</span>`}
-      <hcw-button class="delete-btn" tp flat style="min-width:4rem; font-size:0.8rem; color:var(--danger);">删除</hcw-button>
-      <hcw-button class="modify-btn" flat style="min-width:4rem; font-size:0.8rem;" data-id="${item.ID}">修改</hcw-button>
+    <div class="result-item-actions" style="justify-content:flex-end;">
+      <hcw-button class="reviewed-delete-btn" variant="danger" flat style="min-width:4rem; font-size:0.82rem;">删除</hcw-button>
     </div>
   `;
-
-  if (isUnreviewed) {
-    card.querySelector('.approve-btn').addEventListener('click', e => { e.stopPropagation(); approveItem(item); });
-    card.querySelector('.reject-btn').addEventListener('click', e => { e.stopPropagation(); rejectItem(item); });
-  }
-  card.querySelector('.delete-btn').addEventListener('click', e => { e.stopPropagation(); deleteItem(item); });
-  card.addEventListener('click', () => { window.location.href = `/admin-detail.html?id=${encodeURIComponent(item.ID)}`; });
-  card.querySelector('.modify-btn').addEventListener('click', e => {
+  card.querySelector('.reviewed-delete-btn').addEventListener('click', e => {
     e.stopPropagation();
-    window.location.href = `/admin-edit.html?id=${encodeURIComponent(item.ID)}`;
+    deleteReviewedItem(item);
   });
-
+  card.addEventListener('click', () => { window.location.href = `/admin-detail.html?id=${encodeURIComponent(item.ID)}`; });
   return card;
 }
 
-// ─── 分页渲染 ────────────────────────────────
-const sectionMap = {
-  unreviewed: { list: 'unreviewedList', empty: 'unreviewedEmpty', pagination: 'unreviewedPagination', prevBtn: 'unreviewedPrevBtn', nextBtn: 'unreviewedNextBtn', pageInfo: 'unreviewedPageInfo' },
-  reviewed:  { list: 'reviewedList',  empty: 'reviewedEmpty',  pagination: 'reviewedPagination',  prevBtn: 'reviewedPrevBtn',  nextBtn: 'reviewedNextBtn',  pageInfo: 'reviewedPageInfo' }
-};
-
-function resolveSection(key) {
-  const m = sectionMap[key];
-  return {
-    list: document.getElementById(m.list),
-    empty: document.getElementById(m.empty),
-    pagination: document.getElementById(m.pagination),
-    prevBtn: document.getElementById(m.prevBtn),
-    nextBtn: document.getElementById(m.nextBtn),
-    pageInfo: document.getElementById(m.pageInfo)
-  };
-}
-
-function renderPage(key, showActions) {
-  const state = pageState[key];
-  const el = resolveSection(key);
-
-  const total = state.data.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  if (state.page >= totalPages) state.page = totalPages - 1;
-  if (state.page < 0) state.page = 0;
-
-  const start = state.page * PAGE_SIZE;
-  const end = Math.min(start + PAGE_SIZE, total);
-  const pageData = state.data.slice(start, end);
-
-  el.list.innerHTML = '';
-
-  if (total === 0) {
-    el.empty.classList.remove('hidden');
-    el.pagination.classList.add('hidden');
-    return;
-  }
-
-  el.empty.classList.add('hidden');
-  el.pagination.classList.remove('hidden');
-  el.pageInfo.textContent = `${state.page + 1}/${totalPages}`;
-  el.prevBtn.disabled = state.page === 0;
-  el.nextBtn.disabled = state.page >= totalPages - 1;
-
-  pageData.forEach(item => el.list.appendChild(createTimetableCard(item, showActions)));
-}
-
-// ─── 加载数据 ────────────────────────────────
-async function loadReviewData() {
-  // 重置加载提示文字（修正重试后仍显示"加载失败"的bug）
-  unreviewedLoading.textContent = '加载中...';
-  reviewedLoading.textContent = '加载中...';
-  unreviewedLoading.classList.remove('hidden');
+function loadReviewed() {
   reviewedLoading.classList.remove('hidden');
-  unreviewedList.innerHTML = '';
-  reviewedList.innerHTML = '';
-  unreviewedEmpty.classList.add('hidden');
   reviewedEmpty.classList.add('hidden');
+  reviewedList.innerHTML = '';
+  fetch('/api/admin', { credentials: 'include' })
+    .then(res => res.json().catch(() => ({})))
+    .then(json => {
+      reviewedLoading.classList.add('hidden');
+      const reviewed = (json.success && Array.isArray(json.reviewed)) ? json.reviewed : [];
+      reviewedCount.textContent = reviewed.length + ' 条';
+      if (reviewed.length === 0) {
+        reviewedEmpty.classList.remove('hidden');
+        return;
+      }
+      reviewed.forEach(item => reviewedList.appendChild(createReviewedCard(item)));
+    })
+    .catch(() => {
+      reviewedLoading.classList.add('hidden');
+      reviewedLoading.textContent = '加载失败，请重试';
+    });
+}
+
+async function deleteReviewedItem(item) {
+  if (!confirm(`确认永久删除已审核时刻表 #${item.ID}？此操作不可撤销。`)) return;
+  if (!confirm(`再次确认：删除 ${item.CITY} ${item.WAY}？`)) return;
+  try {
+    const res = await fetch('/api/admin', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: item.ID })
+    });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); showMessage(d.message || d.error || '删除失败', true); return; }
+    showMessage('已删除', false);
+    loadReviewed();
+  } catch { showMessage('网络错误', true); }
+}
+
+function nextReview() {
+  reviewIndex++;
+  if (reviewIndex >= reviewQueue.length) {
+    showEmpty('所有待审核时刻表已处理完毕');
+  } else {
+    showReviewItem();
+  }
+  processing = false;
+}
+
+// ─── 开始审核：加载并逐条展示未审核时刻表 ─────
+startReviewBtn.addEventListener('click', async () => {
+  reviewEntrance.classList.add('hidden');
+  reviewWorkArea.classList.remove('hidden');
+  reviewCard.classList.add('hidden');
+  reviewEmpty.classList.add('hidden');
+  reviewLoading.classList.remove('hidden');
+  reviewLoading.textContent = '加载中...';
 
   try {
     const res = await fetch('/api/admin', { credentials: 'include' });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        // 被驳回时刻表不显示，直到用户修改后重新提交
-        pageState.unreviewed.data = json.unreviewed || [];
-        pageState.reviewed.data = json.reviewed || [];
-      }
+    const json = await res.json().catch(() => ({}));
+    const unreviewed = (res.ok && json.success) ? (json.unreviewed || []) : [];
+
+    if (unreviewed.length === 0) {
+      showEmpty('暂无待审核时刻表');
+    } else {
+      reviewQueue = unreviewed;
+      reviewIndex = 0;
+      showReviewItem();
     }
-    pageState.unreviewed.page = 0;
-    pageState.reviewed.page = 0;
-
-    unreviewedLoading.classList.add('hidden');
-    reviewedLoading.classList.add('hidden');
-    unreviewedCount.textContent = pageState.unreviewed.data.length + ' 条';
-    reviewedCount.textContent = pageState.reviewed.data.length + ' 条';
-
-    renderPage('unreviewed', true);
-    renderPage('reviewed', false);
   } catch (e) {
     console.error('加载审核数据失败:', e);
-    unreviewedLoading.textContent = '加载失败，请重试';
-    reviewedLoading.textContent = '加载失败，请重试';
+    reviewLoading.textContent = '加载失败，请重试';
     showMessage('加载数据失败', true);
   }
-}
+});
 
-// ─── 分页切换 ────────────────────────────────
-function changePage(key, delta) {
-  const state = pageState[key];
-  const totalPages = Math.max(1, Math.ceil(state.data.length / PAGE_SIZE));
-  const target = state.page + delta;
-  if (target < 0 || target >= totalPages) return;
-  state.page = target;
-  renderPage(key, key !== 'reviewed');
-}
+// ─── 通过 ────────────────────────────────────
+approveBtn.addEventListener('click', async () => {
+  if (processing) return;
+  processing = true;
+  approveBtn.disabled = true;
+  rejectBtn.disabled = true;
 
-// ─── 事件绑定 ────────────────────────────────
+  const item = reviewQueue[reviewIndex];
+  if (!item) { processing = false; return; }
+
+  try {
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: item.ID, passer: adminEmail, pass: 1 })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showMessage(data.error || '操作失败', true);
+      processing = false;
+      approveBtn.disabled = false;
+      rejectBtn.disabled = false;
+      return;
+    }
+    showMessage('已通过', false);
+    nextReview();
+  } catch {
+    showMessage('网络错误', true);
+    processing = false;
+    approveBtn.disabled = false;
+    rejectBtn.disabled = false;
+  }
+});
+
+// ─── 驳回 ────────────────────────────────────
+rejectBtn.addEventListener('click', async () => {
+  if (processing) return;
+  processing = true;
+  approveBtn.disabled = true;
+  rejectBtn.disabled = true;
+
+  const item = reviewQueue[reviewIndex];
+  if (!item) { processing = false; return; }
+
+  try {
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: item.ID, passer: adminEmail, action: 'reject' })
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showMessage(d.error || '操作失败', true);
+      processing = false;
+      approveBtn.disabled = false;
+      rejectBtn.disabled = false;
+      return;
+    }
+    showMessage('已驳回', false);
+    nextReview();
+  } catch {
+    showMessage('网络错误', true);
+    processing = false;
+    approveBtn.disabled = false;
+    rejectBtn.disabled = false;
+  }
+});
+
+// ─── 无待审核 / 处理完毕 → 返回时刻表审核页面 ──
+reviewBackBtn.addEventListener('click', backToEntrance);
+
+// ─── 导航 ────────────────────────────────────
 backBtn.addEventListener('click', () => window.location.href = '/admin.html');
 
 logoutBtn.addEventListener('click', () => {
@@ -335,18 +325,5 @@ logoutBtn.addEventListener('click', () => {
   window.location.href = '/admin-login.html';
 });
 
-loadBtn.addEventListener('click', () => {
-  reviewPanel.classList.remove('hidden');
-  loadBtn.disabled = true;
-  loadBtn.textContent = '加载中...';
-  loadReviewData().finally(() => {
-    loadBtn.textContent = '刷新审核列表';
-    loadBtn.disabled = false;
-  });
-});
-
-// ─── 分页按钮事件 ────────────────────────────
-unreviewedPrevBtn.addEventListener('click', () => changePage('unreviewed', -1));
-unreviewedNextBtn.addEventListener('click', () => changePage('unreviewed', 1));
-reviewedPrevBtn.addEventListener('click', () => changePage('reviewed', -1));
-reviewedNextBtn.addEventListener('click', () => changePage('reviewed', 1));
+// ─── 初始加载：展示已审核时刻表 ──────────────
+loadReviewed();
