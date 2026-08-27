@@ -53,6 +53,9 @@ const reviewedLoading = document.getElementById('reviewedLoading');
 const reviewedEmpty = document.getElementById('reviewedEmpty');
 const reviewedCount = document.getElementById('reviewedCount');
 
+const reviewTitle = document.getElementById('reviewTitle');
+const rvTime1 = document.getElementById('rvTime1');
+const rvTime2 = document.getElementById('rvTime2');
 const rvId = document.getElementById('rvId');
 const rvCity = document.getElementById('rvCity');
 const rvWay = document.getElementById('rvWay');
@@ -87,17 +90,44 @@ function showMessage(msg, isError) {
   }
 }
 
-// ─── 渲染当前待审核时刻表详情 ────────────────
+// ─── 渲染当前待审核时刻表详情（参考 mlttc 搜索详情页） ──
+function renderTimeChips(container, timeStr) {
+  container.innerHTML = '';
+  if (timeStr === 'Remove') {
+    container.innerHTML = '<span class="detail-time-chip">线路已撤销</span>';
+    return;
+  }
+  if (!timeStr || timeStr === 'unknown') {
+    container.innerHTML = '<span class="detail-time-chip">未填写或无发车班次</span>';
+    return;
+  }
+  const parts = String(timeStr).split(/[\t\n\r]+/).map(t => t.trim()).filter(t => t);
+  if (parts.length > 0) {
+    parts.forEach(t => {
+      const chip = document.createElement('span');
+      chip.className = 'detail-time-chip';
+      chip.textContent = t;
+      container.appendChild(chip);
+    });
+  } else {
+    container.innerHTML = '<span class="detail-time-chip">未填写或无发车班次</span>';
+  }
+}
+
 function fillReviewItem(item) {
+  reviewTitle.textContent = `${item.CITY || '未知'} · ${item.WAY || '未知'}`;
   rvId.textContent = '#' + item.ID;
   rvCity.textContent = item.CITY || '未知';
   rvWay.textContent = item.WAY || '未知';
   rvStart.textContent = item.START || '未知';
   rvEnd.textContent = item.END || '未知';
   rvSpecial.textContent = (item.SPECIAL && item.SPECIAL !== '无') ? item.SPECIAL : '无';
-  rvStartTime.textContent = (!item.STARTTIME || item.STARTTIME === '1000-1-1') ? '未知' : item.STARTTIME;
+  rvStartTime.textContent = (!item.STARTTIME || item.STARTTIME === '1000-1-1') ? '执行时间未知' : item.STARTTIME;
   rvWriter.textContent = item.WRITER_NAME || item.WRITER || '未知';
   rvWriteTime.textContent = item.WRITETIME || '未知';
+  // 发车时间（参考 mlttc 搜索详情页）
+  renderTimeChips(rvTime1, item.TIMEONE);
+  renderTimeChips(rvTime2, item.TIMETWO);
 }
 
 function showReviewItem() {

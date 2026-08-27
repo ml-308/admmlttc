@@ -59,13 +59,15 @@
                 <hcw-button id="reviewBackBtn" primary flat style="min-width: 8rem; margin-top: 1rem;">返回</hcw-button>
             </div>
 
-            <!-- 单条待审核时刻表详情 -->
+            <!-- 单条待审核时刻表详情（参考 mlttc 搜索详情页） -->
             <div id="reviewCard" class="hidden">
                 <hcw-card>
                     <hcw-card-title style="font-size:1.1rem; display:flex; align-items:center; justify-content:space-between;">
-                        <span>时刻表审核</span>
+                        <span id="reviewTitle">时刻表审核</span>
                         <span id="reviewProgress" style="font-size:0.82rem; color:var(--text-muted);">0/0</span>
                     </hcw-card-title>
+
+                    <!-- 基本信息 -->
                     <div class="detail-info-grid" style="margin-top:0.5rem;">
                         <div class="detail-info-item">
                             <span class="detail-label">ID</span>
@@ -87,25 +89,40 @@
                             <span class="detail-label">终点</span>
                             <span class="detail-value" id="rvEnd">—</span>
                         </div>
-                        <div class="detail-info-item">
-                            <span class="detail-label">执行时间</span>
-                            <span class="detail-value" id="rvStartTime">—</span>
-                        </div>
-                        <div class="detail-info-item">
-                            <span class="detail-label">作者</span>
-                            <span class="detail-value" id="rvWriter">—</span>
-                        </div>
-                        <div class="detail-info-item">
-                            <span class="detail-label">写入时间</span>
-                            <span class="detail-value" id="rvWriteTime">—</span>
-                        </div>
                         <div class="detail-info-item full-width">
                             <span class="detail-label">备注</span>
                             <span class="detail-value" id="rvSpecial">—</span>
                         </div>
                     </div>
+
+                    <!-- 发车时间（参考 mlttc 搜索详情页） -->
+                    <div style="margin-top:1.25rem;">
+                        <h3 class="detail-section-title">主站-&gt;副站[外环]</h3>
+                        <div class="detail-time-grid" id="rvTime1"></div>
+                    </div>
+                    <div style="margin-top:1rem;">
+                        <h3 class="detail-section-title">副站-&gt;主站[内环]</h3>
+                        <div class="detail-time-grid" id="rvTime2"></div>
+                    </div>
+
+                    <!-- 元信息 -->
+                    <div style="margin-top:1.25rem;">
+                        <div class="detail-meta-row">
+                            <span class="detail-meta-label">执行时间</span>
+                            <span class="detail-meta-value" id="rvStartTime">—</span>
+                        </div>
+                        <div class="detail-meta-row">
+                            <span class="detail-meta-label">作者</span>
+                            <span class="detail-meta-value" id="rvWriter">—</span>
+                        </div>
+                        <div class="detail-meta-row">
+                            <span class="detail-meta-label">写入时间</span>
+                            <span class="detail-meta-value" id="rvWriteTime">—</span>
+                        </div>
+                    </div>
+
                     <!-- 通过 / 驳回 操作按钮 -->
-                    <div style="display:flex; gap:1rem; justify-content:center; margin-top:1.25rem;">
+                    <div style="display:flex; gap:1rem; justify-content:center; margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border-light);">
                         <hcw-button id="approveBtn" primary flat style="min-width:6rem;">通过</hcw-button>
                         <hcw-button id="rejectBtn" variant="danger" flat style="min-width:6rem;">驳回</hcw-button>
                     </div>
