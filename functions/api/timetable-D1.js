@@ -10,6 +10,7 @@
  * 说明：本文件同时包含 GET 用的 KV 频率限制与查询参数校验工具。
  */
 import { json, jsonError } from '../_lib/response';
+import { checkRateLimit as sharedCheckRateLimit } from '../_lib/rate-limit';
 
 export async function onRequestPost({ request, env }) {
     const body = await request.json().catch(() => null);
@@ -126,50 +127,10 @@ export async function onRequestPost({ request, env }) {
 }
 
 // ─── 频率限制辅助 ─────────────────────────────────────────────
-// 基于 KV 的简单 IP 频率限制，防止异常流量
-async function checkRateLimit(request, env) {
-  const MAX_REQUESTS = 30;          // 最大请求次数
-  const WINDOW_SECONDS = 60;        // 时间窗口（秒）
-
-  const ip = request.headers.get('CF-Connecting-IP')
-    || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim()
-    || 'unknown';
-
-  const now = Math.floor(Date.now() / 1000);
-  const key = `ratelimit:search:${ip}`;
-
-  // 读取当前记录
-  let record;
-  try {
-    record = await env.mlttckv.get(key, { type: 'json' });
-  } catch {
-    record = null;
-  }
-
-  if (record && record.window === now) {
-    // 同一秒内
-    record.count += 1;
-  } else if (record && now - record.window < WINDOW_SECONDS) {
-    // 仍在时间窗口内
-    record.count += 1;
-    record.window = record.window; // 保持窗口起始时间
-  } else {
-    // 新窗口
-    record = { window: now, count: 1 };
-  }
-
-  // 写回 KV（不 await，不阻塞响应）
-  env.mlttckv.put(key, JSON.stringify(record), { expirationTtl: WINDOW_SECONDS * 2 }).catch(() => {});
-
-  // 超过阈值则拒绝
-  if (record.count > MAX_REQUESTS) {
-    return json({
-      success: false,
-      message: '请求过于频繁，请稍后再试'
-    }, 429);
-  }
-
-  return null; // 通过
+// 详情查询限流：1 分钟 30 次。
+// 实现见 `_lib/rate-limit.js`；全站中间件（`functions/_middleware.js`）另有一层更宽松的限制。
+function checkRateLimit(request, env) {
+    return sharedCheckRateLimit(request, env, { key: 'timetable-detail', max: 30, windowSeconds: 60 });
 }
 
 // ─── 参数校验辅助 ─────────────────────────────────────────────
