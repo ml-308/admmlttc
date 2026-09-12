@@ -73,27 +73,14 @@ export async function onRequestPost({ request, env }) {
             }
         }
 
-        // ─── 被驳回后重新提交：标记已修改驳回 ────────
+        // ─── 被驳回后重新提交：清除驳回标记（不改动 SPECIAL）────
         const existingRow = await env.mlttcd.prepare(
-            'SELECT SPECIAL FROM TIMETABLE WHERE ID = ?'
+            'SELECT BACK FROM TIMETABLE WHERE ID = ?'
         ).bind(id).first();
-        if (existingRow && existingRow.SPECIAL === '时刻表被驳回') {
-            // 用户提交了新的 special → 追加标记；否则自动设为标记
-            if (special !== undefined && special !== null && typeof special === 'string') {
-                const userVal = special.trim().length > 0 ? special.trim() : '无';
-                // 替换 sets 中已有的 SPECIAL 项或新增
-                const spIdx = sets.findIndex(s => s.startsWith('SPECIAL'));
-                if (spIdx !== -1) {
-                    params[spIdx] = userVal + '（已修改驳回）';
-                } else {
-                    sets.push('SPECIAL = ?');
-                    params.push(userVal + '（已修改驳回）');
-                }
-            } else {
-                // 用户未修改备注，自动标记
-                sets.push('SPECIAL = ?');
-                params.push('已修改驳回');
-            }
+        // BACK 非 0/空即视为存在驳回标记（含历史文本值）；重新提交后清除，重新进入待审核队列
+        if (existingRow && existingRow.BACK !== null && existingRow.BACK !== undefined
+            && existingRow.BACK !== 0 && existingRow.BACK !== '0' && existingRow.BACK !== '') {
+            sets.push('BACK = 0');
         }
 
         if (sets.length === 0) {

@@ -52,25 +52,13 @@
         <!-- 6 大功能按钮 -->
         <hcw-card style="margin-top:1.5rem;">
             <hcw-card-title style="font-size: 1.1rem;">功能菜单</hcw-card-title>
-            <div class="admin-dashboard-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:1rem; margin-top:0.5rem;">
-                <hcw-button class="dashboard-btn" primary flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;" data-href="/admin-review.html">
-                    <span>时刻表审核</span>
-                </hcw-button>
-                <hcw-button class="dashboard-btn" flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;" data-href="/admin-users.html">
-                    <span>用户信息</span>
-                </hcw-button>
-                <hcw-button class="dashboard-btn" disabled flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; opacity:0.5;">
-                    <span>系统设置</span>
-                </hcw-button>
-                <hcw-button class="dashboard-btn" disabled flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; opacity:0.5;">
-                    <span>数据统计</span>
-                </hcw-button>
-                <hcw-button class="dashboard-btn" disabled flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; opacity:0.5;">
-                    <span>线路管理</span>
-                </hcw-button>
-                <hcw-button class="dashboard-btn" disabled flat style="min-height:5rem; font-size:0.95rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; opacity:0.5;">
-                    <span>日志记录</span>
-                </hcw-button>
+            <div class="admin-dashboard-grid">
+                <hcw-button class="dashboard-btn" primary flat data-href="/admin-review.html">时刻表审核</hcw-button>
+                <hcw-button class="dashboard-btn" flat data-href="/admin-users.html">用户信息</hcw-button>
+                <hcw-button class="dashboard-btn" disabled flat>系统设置</hcw-button>
+                <hcw-button class="dashboard-btn" disabled flat>数据统计</hcw-button>
+                <hcw-button class="dashboard-btn" disabled flat>线路管理</hcw-button>
+                <hcw-button class="dashboard-btn" disabled flat>日志记录</hcw-button>
             </div>
         </hcw-card>
     </hcw-article>

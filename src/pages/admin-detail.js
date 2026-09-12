@@ -143,18 +143,17 @@ function renderDetail(item) {
   detailWriter.textContent = item.WRITER_NAME || item.WRITER || '未知';
   detailWritetime.textContent = item.WRITETIME || '未知';
 
+  // BACK 列：1 表示被驳回（兼容历史数据中的 '时刻表被驳回' 文本值）
+  const isRejected = Number(item.BACK) === 1 || item.BACK === '时刻表被驳回';
+
   if (item.PASS == true) {
     detailPassStatus.textContent = '已审核';
     detailPassStatus.style.color = 'var(--success)';
     detailPasser.textContent = item.PASSER || '管理员';
-  } else if (item.SPECIAL === '时刻表被驳回') {
+  } else if (isRejected) {
     detailPassStatus.textContent = '被驳回';
     detailPassStatus.style.color = 'var(--danger)';
     detailPasser.textContent = item.PASSER || '管理员';
-  } else if (item.SPECIAL && item.SPECIAL.includes('（已修改驳回）')) {
-    detailPassStatus.textContent = '已修改驳回';
-    detailPassStatus.style.color = '#e67e22';
-    detailPasser.textContent = '—';
   } else {
     detailPassStatus.textContent = '待审核';
     detailPassStatus.style.color = 'var(--warning)';

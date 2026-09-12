@@ -1,5 +1,10 @@
 // ─── 管理员专用 API ─────────────────────────────
 
+// BACK 列：1 表示被驳回（兼容历史数据中的 '时刻表被驳回' 文本值）
+function isRejected(row) {
+  return Number(row.BACK) === 1 || row.BACK === '时刻表被驳回';
+}
+
 // ─── GET: 获取所有时刻表（已按状态分离）─────────
 export async function onRequestGet({ request, env }) {
   try {
@@ -19,7 +24,7 @@ export async function onRequestGet({ request, env }) {
     for (const row of results) {
       if (row.PASS === 1) {
         reviewed.push(row);
-      } else if (row.SPECIAL && row.SPECIAL === '时刻表被驳回') {
+      } else if (isRejected(row)) {
         rejected.push(row);
       } else {
         unreviewed.push(row);
@@ -58,11 +63,10 @@ export async function onRequestPost({ request, env }) {
       });
     }
 
-    // 通过操作：设置 PASS=1 和 PASSER，同时清除驳回标记
+    // 通过操作：设置 PASS=1 和 PASSER，并清除驳回标记（不改动 SPECIAL）
     if (action === 'approve' || (pass !== undefined && Number(pass) === 1)) {
       const result = await env.mlttcd.prepare(
-        `UPDATE TIMETABLE SET PASS = 1, PASSER = ?,
-         SPECIAL = CASE WHEN SPECIAL = '时刻表被驳回' THEN '无' ELSE SPECIAL END
+        `UPDATE TIMETABLE SET PASS = 1, PASSER = ?, BACK = 0
          WHERE ID = ?`
       ).bind(passer || '管理员', id).run();
 
@@ -77,7 +81,7 @@ export async function onRequestPost({ request, env }) {
       });
     }
 
-    // 驳回操作：SPECIAL 替换为"时刻表被驳回"，PASS 保持 0
+    // 驳回操作：BACK 置 1 作为驳回标记，SPECIAL 列保持不变，PASS 保持 0
     if (action === 'reject') {
       const existing = await env.mlttcd.prepare(
         'SELECT ID FROM TIMETABLE WHERE ID = ?'
@@ -90,8 +94,8 @@ export async function onRequestPost({ request, env }) {
       }
 
       await env.mlttcd.prepare(
-        'UPDATE TIMETABLE SET PASS = 0, SPECIAL = ?, PASSER = ? WHERE ID = ?'
-      ).bind('时刻表被驳回', passer || '管理员', id).run();
+        'UPDATE TIMETABLE SET PASS = 0, BACK = 1, PASSER = ? WHERE ID = ?'
+      ).bind(passer || '管理员', id).run();
 
       return new Response(JSON.stringify({ success: true, message: '已驳回' }), {
         status: 200, headers: { 'Content-Type': 'application/json' }

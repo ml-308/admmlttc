@@ -287,11 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       myTimetables = json.data || [];
-      // 被驳回 > 已修改驳回 > 待审核 > 已通过 排序
+      // 被驳回 > 待审核 > 已通过 排序（驳回状态由 BACK 列判定）
       myTimetables.sort((a, b) => {
         const getLevel = (x) => {
-          if (x.SPECIAL === '时刻表被驳回') return 3;
-          if (x.SPECIAL && x.SPECIAL.includes('（已修改驳回）')) return 2;
+          if (Number(x.BACK) === 1 || x.BACK === '时刻表被驳回') return 3;
           if (x.PASS == true) return 0;
           return 1;
         };
@@ -340,6 +339,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const time1Display = formatTimeDisplay(item.TIMEONE);
       const time2Display = formatTimeDisplay(item.TIMETWO);
+      // 驳回状态由 BACK 列判定（1 为被驳回，兼容历史文本值）
+      const itemRejected = Number(item.BACK) === 1 || item.BACK === '时刻表被驳回';
 
       card.innerHTML = `
         <div class="result-item-header">
@@ -360,13 +361,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <span>写入: ${item.WRITETIME || '未知'}</span>
             <span style="font-weight:600; ${
               item.PASS == true ? 'color:var(--success);' :
-              item.SPECIAL === '时刻表被驳回' ? 'color:var(--danger);' :
-              (item.SPECIAL && item.SPECIAL.includes('（已修改驳回）')) ? 'color:#e67e22;' :
+              itemRejected ? 'color:var(--danger);' :
               'color:var(--warning);'
             }">${
               item.PASS == true ? '已通过' :
-              item.SPECIAL === '时刻表被驳回' ? '被驳回' :
-              (item.SPECIAL && item.SPECIAL.includes('（已修改驳回）')) ? '已修改驳回' :
+              itemRejected ? '被驳回' :
               '待审核'
             }</span>
           </div>

@@ -86,10 +86,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: var(--radius-lg);
+            border-radius: var(--hcw-button-radius, var(--radius-lg));
             background-color: var(--button-bg);
             color: var(--button-color);
-            padding: .45rem .25rem;
+            padding: var(--hcw-button-padding, .45rem .25rem);
             backdrop-filter: blur(.5rem) saturate(3);
             box-shadow:
                 0 0 .25rem #0001,
@@ -100,9 +100,10 @@
             transition-property: transform, background-color, color, box-shadow;
             text-align: center;
             cursor: pointer;
-            font-size: 1rem;
-            min-height: 2.25rem;
-            min-width: 2.25rem;
+            gap: var(--hcw-button-gap, 0);
+            font-size: var(--hcw-button-font-size, 1rem);
+            min-height: var(--hcw-button-min-height, 2.25rem);
+            min-width: var(--hcw-button-min-width, 2.25rem);
             text-decoration: none;
             -webkit-tap-highlight-color: transparent;
             animation: general_fadeIn_fixed_noreplace_dontrestore var(--transition-slow) 0s 1 forwards;
@@ -119,7 +120,7 @@
         }
 
         :host([large])>.inner-root {
-            font-size: 1.25rem;
+            font-size: var(--hcw-button-font-size, 1.25rem);
         }
 
         :host([inline])>.inner-root {

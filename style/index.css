@@ -26,6 +26,113 @@
     }
 }
 
+/* ---------- 管理员面板：功能菜单按钮 ---------- */
+.admin-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(10rem, 100%), 1fr));
+    gap: 0.9rem;
+    margin-top: 0.75rem;
+}
+
+.admin-dashboard-grid>.dashboard-btn {
+    /* hcw-button 内部（阴影 DOM）外观钩子 */
+    --hcw-button-radius: var(--radius-lg);
+    --hcw-button-padding: 0.9rem 0.75rem;
+    --hcw-button-font-size: 0.95rem;
+    --hcw-button-min-height: 5.25rem;
+    --hcw-button-gap: 0.3rem;
+    /* 悬停配色：阴影 DOM 内部按钮使用 */
+    --button-bg-hl: var(--primary-bg);
+    --button-color-hl: var(--primary);
+
+    width: 100%;
+    min-height: 5.25rem;
+    padding: 0;
+    /* 撑满网格单元，避免内部按钮宽度收缩 */
+    align-items: stretch;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+    font-weight: 600;
+    box-shadow: none;
+    transition: var(--transition-normal);
+    transition-property: transform, background-color, border-color, box-shadow;
+}
+
+.admin-dashboard-grid>.dashboard-btn:hover:not([disabled]) {
+    background-color: var(--primary-bg);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 113, 227, 0.14);
+}
+
+.admin-dashboard-grid>.dashboard-btn:active:not([disabled]) {
+    transform: scale(0.97);
+}
+
+/* 主按钮（时刻表审核）：内部按钮自带填充色，主机去掉边框避免出现灰边 */
+.admin-dashboard-grid>.dashboard-btn[primary] {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.admin-dashboard-grid>.dashboard-btn[primary]:hover:not([disabled]) {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--on-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 113, 227, 0.3);
+}
+
+.admin-dashboard-grid>.dashboard-btn[disabled] {
+    background-color: transparent;
+    border-style: dashed;
+    border-color: var(--border-light);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 深色模式：提高未实现项的对比度 */
+[data-theme="dark"] .admin-dashboard-grid>.dashboard-btn {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .admin-dashboard-grid>.dashboard-btn:hover:not([disabled]) {
+    background-color: rgba(41, 151, 255, 0.16);
+    border-color: rgba(41, 151, 255, 0.4);
+    color: var(--primary-light);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* 移动端：两列布局 + 更紧凑的尺寸 */
+@media(max-width: 768px) {
+    .admin-dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+}
+
+@media(max-width: 480px) {
+    .admin-dashboard-grid {
+        gap: 0.6rem;
+        margin-top: 0.5rem;
+    }
+
+    .admin-dashboard-grid>.dashboard-btn {
+        --hcw-button-min-height: 4.5rem;
+        --hcw-button-font-size: 0.88rem;
+        --hcw-button-padding: 0.7rem 0.5rem;
+
+        min-height: 4.5rem;
+    }
+}
+
 @keyframes modalFadeIn {
     from {
         opacity: 0;
