@@ -1,31 +1,16 @@
-// ─── 管理员时刻表详情页 ─────────────────────────
+/**
+ * src/pages/admin-detail.js
+ * ─────────────────────────────────────────────────────────────
+ * 管理员 —— 时刻表详情页：展示单条时刻表的完整信息与审核状态。
+ * 入口：/admin-detail.html?id=<时刻表ID>
+ *
+ * 依赖：src/core/auth.js（登录态守卫）、src/utils/toast.js（轻提示）
+ */
+import { requireAdminSession } from '../core/auth';
+import { showMessage } from '../utils/toast';
 
-// ─── JWT 解析辅助 ─────────────────────────────
-function parseJwtPayload(token) {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload));
-  } catch { return null; }
-}
-
-// ─── 管理员 JWT 验证 ──────────────────────────
-(function checkAuth() {
-  const token = sessionStorage.getItem('admin_token');
-  if (!token) {
-    sessionStorage.removeItem('admin_logged_in');
-    sessionStorage.removeItem('admin_email');
-    window.location.href = '/admin-login.html';
-    return;
-  }
-  const payload = parseJwtPayload(token);
-  if (!payload || payload.role !== 'admin' || Date.now() / 1000 > payload.exp) {
-    sessionStorage.removeItem('admin_token');
-    sessionStorage.removeItem('admin_email');
-    sessionStorage.removeItem('admin_logged_in');
-    window.location.href = '/admin-login.html';
-    return;
-  }
-})();
+// ─── 登录态守卫：未登录或 token 过期时清理会话并跳转登录页 ──
+requireAdminSession();
 
 const backBtn = document.getElementById('back-btn');
 const detailBackBtn = document.getElementById('detail-back-btn');
@@ -49,20 +34,7 @@ const detailWritetime = document.getElementById('detail-writetime');
 const detailPassStatus = document.getElementById('detail-pass-status');
 const detailPasser = document.getElementById('detail-passer');
 
-function showMessage(msg, isError) {
-  const popup = document.createElement('div');
-  popup.textContent = msg;
-  popup.style.cssText = 'position:fixed; top:20px; left:50%; padding:10px 20px; border-radius:5px; z-index:9999; color:#fff; font-size:0.85rem; animation: fadeInOut 2s ease forwards; transform:translateX(-50%);';
-  popup.style.backgroundColor = isError ? '#f44336' : '#4CAF50';
-  document.body.appendChild(popup);
-  setTimeout(() => popup.remove(), 2000);
-  if (!document.getElementById('showMsgAnimStyles_admin_detail')) {
-    const ss = document.createElement('style');
-    ss.id = 'showMsgAnimStyles_admin_detail';
-    ss.textContent = '@keyframes fadeInOut{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}85%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-20px)}}';
-    document.head.appendChild(ss);
-  }
-}
+// 轻提示 showMessage 已抽到 src/utils/toast.js（见文件顶部 import）
 
 function formatTimeDisplay(timeStr) {
   if (!timeStr || timeStr === 'unknown') return [];

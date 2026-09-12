@@ -16,20 +16,20 @@
 
 <body>
     <hcw-body-header>
-        <hcw-button flat fill style="min-width: 5rem;" id="backBtn">返回首页</hcw-button>
+        <hcw-button flat fill class="btn-min-md" id="backBtn">返回首页</hcw-button>
         <div class="logo-area">
             <div class="logo-text">MLTTC - 管理员登录</div>
         </div>
-        <p hidden-on-mobile style="margin-left: auto; color: var(--text-muted)">Beta测试版</p>
+        <p hidden-on-mobile class="header-note">Beta测试版</p>
         <div id="headerAuthArea">
             <hcw-button id="themeToggleBtn" flat icon large aria-label="切换主题">🌙</hcw-button>
         </div>
     </hcw-body-header>
 
-    <hcw-article style="max-width: 32rem; margin: 0 auto;">
+    <hcw-article class="narrow-article">
         <hcw-card>
-            <hcw-card-title style="font-size: 1.2rem; text-align: center;">管理员验证</hcw-card-title>
-            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
+            <hcw-card-title class="card-title-center">管理员验证</hcw-card-title>
+            <div class="form-stack">
                 <div class="form-group">
                     <label>邮箱 / 昵称</label>
                     <input hcw-input type="text" id="loginEmail" placeholder="输入您的邮箱或昵称" autocomplete="off">
@@ -42,8 +42,8 @@
                     <label>管理员令牌</label>
                     <input hcw-input type="password" id="adminToken" placeholder="输入管理员令牌">
                 </div>
-                <div id="loginError" class="error-msg" style="display: none;"></div>
-                <hcw-button primary large flat id="loginBtn" style="min-width: 8rem; align-self: center;">
+                <div id="loginError" class="error-msg"></div>
+                <hcw-button primary large flat id="loginBtn" class="btn-min-xl self-center">
                     验证身份
                 </hcw-button>
             </div>
@@ -60,7 +60,7 @@
         const tokenInput = document.getElementById('adminToken');
         const errorDiv = document.getElementById('loginError');
 
-        console.log("V0.1.2");
+        console.log("V0.1.2.1");
 
         backBtn.addEventListener('click', () => window.location.href = '/index.html');
 

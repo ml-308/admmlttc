@@ -1,128 +1,86 @@
-// functions/api/admin-login.js
+/**
+ * functions/api/admin-login.js
+ * ─────────────────────────────────────────────────────────────
+ * POST /api/admin-login
+ *
+ * 管理后台登录，三步校验全部在服务端完成：
+ *   1. 账号（邮箱或昵称）+ 密码正确
+ *   2. `USER.adm` 属于管理员角色（`adm` 或 `station`）
+ *   3. 提交的 `adminToken` 与 `USER.TAK` 列一致
+ * 校验通过后签发 3 天有效期的 JWT（payload 带 `role: 'admin'`）。
+ */
 import { signToken } from '../auth';
+import { verifyPassword } from '../_lib/password';
+import { json, jsonFail } from '../_lib/response';
 
-// 密码验证函数（与注册时的 hashPassword 配对使用）
-async function verifyPassword(password, storedValue) {
-  const [saltHex, originalHashHex] = storedValue.split(':');
-  if (!saltHex || !originalHashHex) return false;
+/** 允许进入管理后台的 adm 取值（小写比较） */
+const ADMIN_ROLES = ['adm', 'station'];
 
-  const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(password),
-    'PBKDF2',
-    false,
-    ['deriveBits']
-  );
-  const derivedBits = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      salt: salt,
-      iterations: 100000,
-      hash: 'SHA-256'
-    },
-    key,
-    256
-  );
-  const newHashHex = Array.from(new Uint8Array(derivedBits))
-    .map(b => b.toString(16).padStart(2, '0')).join('');
-  return newHashHex === originalHashHex;
-}
-
-const ADMIN_TOKEN_EXPIRY = 259200; // 3天（秒）
+/** 管理员 JWT 有效期（秒）：3 天 */
+const ADMIN_TOKEN_EXPIRY = 259200;
 
 export async function onRequestPost({ request, env }) {
   try {
+    // ── 解析并校验请求体 ──────────────────────────────────
     const body = await request.json().catch(() => null);
     if (!body) {
-      return new Response(JSON.stringify({ success: false, message: '无效的请求数据' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return jsonFail('无效的请求数据', 400);
     }
 
     const { email, password, adminToken } = body;
     if (!email || !password) {
-      return new Response(JSON.stringify({ success: false, message: '账号和密码不能为空' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return jsonFail('账号和密码不能为空', 400);
     }
     if (!adminToken || !String(adminToken).trim()) {
-      return new Response(JSON.stringify({ success: false, message: '请输入管理员令牌' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return jsonFail('请输入管理员令牌', 400);
     }
 
-    // 支持邮箱或昵称登录
+    // ── 查用户：含 @ 按邮箱匹配，否则按昵称匹配 ────────────
     const input = email.trim();
-    let user;
-    if (input.includes('@')) {
-      user = await env.mlttcd.prepare(
-        'SELECT id, email, NAME, password, adm, TAK FROM USER WHERE email = ?'
-      ).bind(input.toLowerCase()).first();
-    } else {
-      user = await env.mlttcd.prepare(
-        'SELECT id, email, NAME, password, adm, TAK FROM USER WHERE NAME = ?'
-      ).bind(input).first();
-    }
+    const sql = input.includes('@')
+      ? 'SELECT id, email, NAME, password, adm, TAK FROM USER WHERE email = ?'
+      : 'SELECT id, email, NAME, password, adm, TAK FROM USER WHERE NAME = ?';
+    const user = await env.mlttcd.prepare(sql)
+      .bind(input.includes('@') ? input.toLowerCase() : input)
+      .first();
 
     if (!user) {
-      return new Response(JSON.stringify({ success: false, message: '管理员账号或密码错误' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return jsonFail('管理员账号或密码错误', 401);
     }
 
-    // 验证管理员权限：adm 列严格等于 'adm' 或 'STATION' 才判定为管理员
-    if (!user.adm || (String(user.adm).trim().toLowerCase() !== 'adm' && String(user.adm).trim().toLowerCase() !== 'STATION')) {
-      return new Response(JSON.stringify({ success: false, message: '该账号无管理员权限' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    // ── 校验管理员角色 ────────────────────────────────────
+    const admValue = String(user.adm || '').trim().toLowerCase();
+    if (!ADMIN_ROLES.includes(admValue)) {
+      return jsonFail('该账号无管理员权限', 403);
     }
 
-    // 验证密码
+    // ── 校验密码 ──────────────────────────────────────────
     const isPasswordValid = await verifyPassword(password, user.password);
     if (!isPasswordValid) {
-      return new Response(JSON.stringify({ success: false, message: '管理员账号或密码错误' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return jsonFail('管理员账号或密码错误', 401);
     }
 
-    // 验证管理员令牌：与 USER.TAK 列比对（宽松比较以兼容类型差异）
+    // ── 校验管理员令牌（宽松比较以兼容类型差异）───────────
     if (!user.TAK || user.TAK != String(adminToken).trim()) {
-      return new Response(JSON.stringify({ success: false, message: '管理员令牌错误' }), {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return jsonFail('管理员令牌错误', 403);
     }
 
-    // 生成 JWT（3天过期）
+    // ── 签发 JWT ──────────────────────────────────────────
     const token = await signToken(
       { userId: user.id, email: user.email, role: 'admin' },
       env.JWT_SECRET,
       ADMIN_TOKEN_EXPIRY
     );
 
-    return new Response(JSON.stringify({
+    return json({
       success: true,
       token,
       email: user.email,
       name: user.NAME,
       message: '管理员登录成功'
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, 200);
   } catch (error) {
     console.error('管理员登录错误:', error);
-    return new Response(JSON.stringify({ success: false, message: '服务器错误' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return jsonFail('服务器错误', 500);
   }
 }

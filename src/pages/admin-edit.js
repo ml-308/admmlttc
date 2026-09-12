@@ -1,39 +1,22 @@
-// ─── 管理员修改时刻表页面 ─────────────────────────
-
+/**
+ * src/pages/admin-edit.js
+ * ─────────────────────────────────────────────────────────────
+ * 管理员 —— 修改时刻表页：编辑并提交修改后的时刻表信息。
+ * 入口：/admin-edit.html?id=<时刻表ID>
+ *
+ * 依赖：src/core/auth.js（登录态守卫）、src/utils/toast.js（轻提示）、
+ *       /lib/ui/popup.mjs（确认弹窗）
+ */
 import { showPrompt } from '/lib/ui/popup.mjs';
+import { requireAdminSession, getAdminEmail, clearAdminSession } from '../core/auth';
+import { showMessage } from '../utils/toast';
 
-// ─── JWT 解析辅助 ─────────────────────────────
-function parseJwtPayload(token) {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload));
-  } catch { return null; }
+// ─── 登录态守卫 + 头部邮箱展示 ─────────────────────────────
+const adminPayload = requireAdminSession();
+if (adminPayload) {
+  const el = document.getElementById('adminEmailDisplay');
+  if (el) el.textContent = adminPayload.email || getAdminEmail();
 }
-
-// ─── 管理员 JWT 验证 ──────────────────────────
-(function checkAuth() {
-  // 清除可能残留的旧 sessionStorage 数据，防止与旧登录页形成重定向循环
-  const token = sessionStorage.getItem('admin_token');
-  if (!token) {
-    sessionStorage.removeItem('admin_logged_in');
-    sessionStorage.removeItem('admin_email');
-    window.location.href = '/admin-login.html';
-    return;
-  }
-  const payload = parseJwtPayload(token);
-  if (!payload || payload.role !== 'admin' || Date.now() / 1000 > payload.exp) {
-    sessionStorage.removeItem('admin_token');
-    sessionStorage.removeItem('admin_email');
-    sessionStorage.removeItem('admin_logged_in');
-    window.location.href = '/admin-login.html';
-    return;
-  }
-  const email = payload.email || sessionStorage.getItem('admin_email');
-  if (email) {
-    const el = document.getElementById('adminEmailDisplay');
-    if (el) el.textContent = email;
-  }
-})();
 
 // ─── DOM 元素 ────────────────────────────────
 
@@ -87,28 +70,7 @@ let judge = {
 
 // ─── 工具函数 ────────────────────────────────
 
-function showMessage(msg, isError) {
-  const popup = document.createElement('div');
-  popup.textContent = msg;
-  popup.style.cssText = 'position:fixed; top:20px; left:50%; padding:10px 20px; border-radius:5px; z-index:9999; color:#fff; font-size:0.85rem; animation: fadeInOut 2s ease forwards; transform:translateX(-50%);';
-  popup.style.backgroundColor = isError ? '#f44336' : '#4CAF50';
-  document.body.appendChild(popup);
-  setTimeout(() => popup.remove(), 2500);
-
-  if (!document.getElementById('showMsgAnimStyles_admin_edit')) {
-    const styleSheet = document.createElement('style');
-    styleSheet.id = 'showMsgAnimStyles_admin_edit';
-    styleSheet.textContent = `
-      @keyframes fadeInOut {
-        0%   { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-        15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
-        85%  { opacity: 1; transform: translateX(-50%) translateY(0); }
-        100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-      }
-    `;
-    document.head.appendChild(styleSheet);
-  }
-}
+// 轻提示 showMessage 已抽到 src/utils/toast.js（见文件顶部 import）
 
 function getQueryParam(name) {
   const params = new URLSearchParams(window.location.search);
@@ -453,8 +415,8 @@ function buildData() {
 // ─── 提交 ────────────────────────────────────
 
 async function submitEdit() {
-  // 管理员用 sessionStorage 取得邮箱
-  const adminEmail = sessionStorage.getItem('admin_email');
+  // 管理员邮箱（来自会话）
+  const adminEmail = getAdminEmail();
   if (!adminEmail) {
     showMessage('无法获取管理员信息', true);
     return;

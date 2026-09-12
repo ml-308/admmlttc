@@ -1,36 +1,20 @@
-// ─── 管理员主面板页面 ───────────────────────────
+/**
+ * src/pages/admin.js
+ * ─────────────────────────────────────────────────────────────
+ * 管理员主面板：展示管理员信息卡（昵称 / 邮箱 / 身份）与功能菜单。
+ * 入口：/admin.html
+ *
+ * 依赖：src/core/auth.js（登录态守卫）、src/utils/role.js（身份文案）
+ */
+import { requireAdminSession, getAdminEmail, clearAdminSession, getAdminToken } from '../core/auth';
+import { getRoleInfo } from '../utils/role';
 
-// ─── JWT 解析辅助 ─────────────────────────────
-function parseJwtPayload(token) {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload));
-  } catch { return null; }
+// ─── 登录态守卫 + 头部邮箱展示 ─────────────────────────────
+const adminPayload = requireAdminSession();
+if (adminPayload) {
+  const el = document.getElementById('adminEmailDisplay');
+  if (el) el.textContent = adminPayload.email || getAdminEmail();
 }
-
-// ─── 管理员 JWT 验证 ──────────────────────────
-(function checkAuth() {
-  const token = sessionStorage.getItem('admin_token');
-  if (!token) {
-    sessionStorage.removeItem('admin_logged_in');
-    sessionStorage.removeItem('admin_email');
-    window.location.href = '/admin-login.html';
-    return;
-  }
-  const payload = parseJwtPayload(token);
-  if (!payload || payload.role !== 'admin' || Date.now() / 1000 > payload.exp) {
-    sessionStorage.removeItem('admin_token');
-    sessionStorage.removeItem('admin_email');
-    sessionStorage.removeItem('admin_logged_in');
-    window.location.href = '/admin-login.html';
-    return;
-  }
-  const email = payload.email || sessionStorage.getItem('admin_email');
-  if (email) {
-    const el = document.getElementById('adminEmailDisplay');
-    if (el) el.textContent = email;
-  }
-})();
 
 // ─── DOM ────────────────────────────────────
 const backBtn = document.getElementById('backBtn');
@@ -44,7 +28,7 @@ const profileRole = document.getElementById('profileRole');
 
 // ─── 加载管理员信息 ──────────────────────────
 async function loadProfile() {
-  const token = sessionStorage.getItem('admin_token');
+  const token = getAdminToken();
   if (!token) return;
 
   try {
@@ -64,18 +48,10 @@ async function loadProfile() {
     profileName.textContent = user.NAME || '未设置';
     profileEmail.textContent = user.email || '—';
 
-    // 身份：adm = 'adm' → 管理员；adm = 'STATION' → 站长（紫底白字）；其他 → 普通用户
-    const admValue = String(user.adm || '').trim().toLowerCase();
-    if (admValue === 'adm') {
-      profileRole.textContent = '管理员';
-      profileRole.className = 'role-badge role-admin';
-    } else if (admValue === 'station') {
-      profileRole.textContent = '站长';
-      profileRole.className = 'role-badge role-station';
-    } else {
-      profileRole.textContent = '普通用户';
-      profileRole.className = 'role-badge role-user';
-    }
+    // 身份：由 USER.adm 映射（adm → 管理员 / station → 站长 / 其他 → 普通用户）
+    const role = getRoleInfo(user.adm);
+    profileRole.textContent = role.text;
+    profileRole.className = role.className;
 
     profileLoading.classList.add('hidden');
     profileContent.classList.remove('hidden');
@@ -95,9 +71,8 @@ document.querySelectorAll('.dashboard-btn:not([disabled])').forEach(btn => {
 
 // ─── 退出登录 ────────────────────────────────
 logoutBtn.addEventListener('click', () => {
-  sessionStorage.removeItem('admin_logged_in');
-  sessionStorage.removeItem('admin_token');
-  sessionStorage.removeItem('admin_email');
+  // 清理 admin_token / admin_email / admin_logged_in
+  clearAdminSession();
   window.location.href = '/admin-login.html';
 });
 

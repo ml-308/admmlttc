@@ -1,36 +1,20 @@
-// ─── 管理员时刻表审核页面（逐条审核工作流） ───────────────
+/**
+ * src/pages/admin-review.js
+ * ─────────────────────────────────────────────────────────────
+ * 管理员 —— 时刻表审核页：逐条审核待审核时刻表，并管理已审核记录。
+ * 入口：/admin-review.html
+ *
+ * 依赖：src/core/auth.js（登录态守卫）、src/utils/toast.js（轻提示）
+ */
+import { requireAdminSession, getAdminEmail, clearAdminSession } from '../core/auth';
+import { showMessage } from '../utils/toast';
 
-// ─── JWT 解析辅助 ─────────────────────────────
-function parseJwtPayload(token) {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload));
-  } catch { return null; }
+// ─── 登录态守卫 + 头部邮箱展示 ─────────────────────────────
+const adminPayload = requireAdminSession();
+if (adminPayload) {
+  const el = document.getElementById('adminEmailDisplay');
+  if (el) el.textContent = adminPayload.email || getAdminEmail();
 }
-
-// ─── 管理员 JWT 验证 ──────────────────────────
-(function checkAuth() {
-  const token = sessionStorage.getItem('admin_token');
-  if (!token) {
-    sessionStorage.removeItem('admin_logged_in');
-    sessionStorage.removeItem('admin_email');
-    window.location.href = '/admin-login.html';
-    return;
-  }
-  const payload = parseJwtPayload(token);
-  if (!payload || payload.role !== 'admin' || Date.now() / 1000 > payload.exp) {
-    sessionStorage.removeItem('admin_token');
-    sessionStorage.removeItem('admin_email');
-    sessionStorage.removeItem('admin_logged_in');
-    window.location.href = '/admin-login.html';
-    return;
-  }
-  const email = payload.email || sessionStorage.getItem('admin_email');
-  if (email) {
-    const el = document.getElementById('adminEmailDisplay');
-    if (el) el.textContent = email;
-  }
-})();
 
 // ─── DOM ────────────────────────────────────
 const backBtn = document.getElementById('backBtn');
@@ -66,7 +50,7 @@ const rvStartTime = document.getElementById('rvStartTime');
 const rvWriter = document.getElementById('rvWriter');
 const rvWriteTime = document.getElementById('rvWriteTime');
 
-const adminEmail = sessionStorage.getItem('admin_email') || '';
+const adminEmail = getAdminEmail();
 
 // ─── 审核队列状态 ────────────────────────────
 let reviewQueue = [];   // 待审核时刻表列表
@@ -74,21 +58,7 @@ let reviewIndex = 0;    // 当前展示下标
 let processing = false; // 防止重复点击
 
 // ─── 工具 ────────────────────────────────────
-function showMessage(msg, isError) {
-  const popup = document.createElement('div');
-  popup.textContent = msg;
-  popup.style.cssText = 'position:fixed; top:20px; left:50%; padding:10px 20px; border-radius:5px; z-index:9999; color:#fff; font-size:0.85rem; animation: fadeInOut 2s ease forwards; transform:translateX(-50%);';
-  popup.style.backgroundColor = isError ? '#f44336' : '#4CAF50';
-  document.body.appendChild(popup);
-  setTimeout(() => popup.remove(), 2500);
-
-  if (!document.getElementById('showMsgAnimStyles_admin')) {
-    const ss = document.createElement('style');
-    ss.id = 'showMsgAnimStyles_admin';
-    ss.textContent = `@keyframes fadeInOut{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}85%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-20px)}}`;
-    document.head.appendChild(ss);
-  }
-}
+// 轻提示 showMessage 已抽到 src/utils/toast.js（见文件顶部 import）
 
 // ─── 渲染当前待审核时刻表详情（参考 mlttc 搜索详情页） ──
 function renderTimeChips(container, timeStr) {
@@ -349,9 +319,8 @@ reviewBackBtn.addEventListener('click', backToEntrance);
 backBtn.addEventListener('click', () => window.location.href = '/admin.html');
 
 logoutBtn.addEventListener('click', () => {
-  sessionStorage.removeItem('admin_logged_in');
-  sessionStorage.removeItem('admin_token');
-  sessionStorage.removeItem('admin_email');
+  // 清理 admin_token / admin_email / admin_logged_in
+  clearAdminSession();
   window.location.href = '/admin-login.html';
 });
 

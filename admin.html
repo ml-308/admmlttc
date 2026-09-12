@@ -13,45 +13,45 @@
 
 <body>
     <hcw-body-header>
-        <hcw-button flat fill style="min-width: 5rem;" id="backBtn">返回首页</hcw-button>
+        <hcw-button flat fill class="btn-min-md" id="backBtn">返回首页</hcw-button>
         <div class="logo-area">
             <div class="logo-text">MLTTC - 管理员面板</div>
         </div>
-        <p hidden-on-mobile style="margin-left: auto; color: var(--text-muted)">管理员主页</p>
+        <p hidden-on-mobile class="header-note">管理员主页</p>
         <div id="headerAuthArea">
             <hcw-button id="themeToggleBtn" flat icon large aria-label="切换主题">🌙</hcw-button>
-            <span style="font-size:0.82rem; color:var(--text-muted);" id="adminEmailDisplay"></span>
-            <hcw-button id="logoutBtn" flat style="min-width: 4rem; font-size:0.82rem;">退出</hcw-button>
+            <span class="header-email" id="adminEmailDisplay"></span>
+            <hcw-button id="logoutBtn" flat class="btn-min-sm btn-sm">退出</hcw-button>
         </div>
     </hcw-body-header>
 
     <hcw-article>
         <!-- 管理员个人信息卡片 -->
         <hcw-card id="profileCard">
-            <hcw-card-title style="font-size: 1.1rem; display:flex; align-items:center; gap:8px;">
+            <hcw-card-title class="card-title-row-start">
                 <span>管理员信息</span>
             </hcw-card-title>
-            <div id="profileLoading" style="text-align:center; padding:1rem 0; color:var(--text-muted);">加载中...</div>
-            <div id="profileContent" class="hidden" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:0.5rem;">
-                <div style="flex:1; min-width:120px;">
-                    <span style="font-size:0.78rem; color:var(--text-muted);">昵称</span>
-                    <div style="font-size:1rem; font-weight:600;" id="profileName">—</div>
+            <div id="profileLoading" class="state-loading">加载中...</div>
+            <div id="profileContent" class="hidden profile-grid">
+                <div class="profile-field">
+                    <span class="profile-field-label">昵称</span>
+                    <div class="profile-field-value profile-field-value--strong" id="profileName">—</div>
                 </div>
-                <div style="flex:1; min-width:180px;">
-                    <span style="font-size:0.78rem; color:var(--text-muted);">邮箱</span>
-                    <div style="font-size:1rem;" id="profileEmail">—</div>
+                <div class="profile-field profile-field--wide">
+                    <span class="profile-field-label">邮箱</span>
+                    <div class="profile-field-value" id="profileEmail">—</div>
                 </div>
-                <div style="flex:1; min-width:100px;">
-                    <span style="font-size:0.78rem; color:var(--text-muted);">身份</span>
-                    <div class="role-badge role-user" id="profileRole" style="font-size:1rem;">—</div>
+                <div class="profile-field">
+                    <span class="profile-field-label">身份</span>
+                    <div class="role-badge role-user" id="profileRole">—</div>
                 </div>
             </div>
-            <div id="profileError" class="hidden" style="text-align:center; padding:1rem 0; color:var(--danger); font-size:0.85rem;">加载失败</div>
+            <div id="profileError" class="hidden state-error">加载失败</div>
         </hcw-card>
 
         <!-- 6 大功能按钮 -->
-        <hcw-card style="margin-top:1.5rem;">
-            <hcw-card-title style="font-size: 1.1rem;">功能菜单</hcw-card-title>
+        <hcw-card class="mt-lg">
+            <hcw-card-title class="card-title-sm">功能菜单</hcw-card-title>
             <div class="admin-dashboard-grid">
                 <hcw-button class="dashboard-btn" primary flat data-href="/admin-review.html">时刻表审核</hcw-button>
                 <hcw-button class="dashboard-btn" flat data-href="/admin-users.html">用户信息</hcw-button>

@@ -1,57 +1,12 @@
-// js/auth-header.js
-
-// 从 cookie 中读取指定名称的值
-function getCookie(name) {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-// 检查登录状态（仅读取 cookie，不查询数据库）
-function checkAuth() {
-  const name = getCookie('user_name');
-  if (name !== null) {
-    return { loggedIn: true, displayName: name || '未设置昵称' };
-  }
-  return { loggedIn: false };
-}
-
-// 退出登录
-async function logout() {
-  await fetch('/api/logout-D1', { credentials: 'include' });
-  window.location.href = '/login.html';
-}
-
-// 绑定退出按钮事件
-function bindLogoutButton() {
-  const logoutBtn = document.getElementById('globalLogoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', logout);
-  }
-}
-
-// 根据登录状态切换头部 UI
-function updateHeaderAuth() {
-  const loginBtn = document.getElementById('globalLoginBtn');
-  const userInfoDiv = document.getElementById('globalUserInfo');
-  const displayName = document.getElementById('globalDisplayName');
-
-  // 确保元素都存在（有的页面可能没有这个头部）
-  if (!loginBtn || !userInfoDiv || !displayName) return;
-
-  const { loggedIn, displayName: name } = checkAuth();
-
-  if (loggedIn) {
-    // 已登录：显示用户信息，隐藏登录按钮
-    loginBtn.style.display = 'none';
-    userInfoDiv.style.display = 'block';
-    displayName.textContent = name;
-    bindLogoutButton();
-  } else {
-    // 未登录：显示登录按钮，隐藏用户信息
-    loginBtn.style.display = 'inline-block'; // 或原来 hcw-button 的 display
-    userInfoDiv.style.display = 'none';
-  }
-}
+/**
+ * src/auth-header.js
+ * ─────────────────────────────────────────────────────────────
+ * 管理端头部公共脚本（所有管理页以 `<script type="module">` 引入）。
+ *
+ * 职责：深/浅色主题的初始化与切换（跟随系统偏好 + localStorage 记忆）。
+ * 说明：本仓库是管理员站点，登录/退出统一由页面脚本通过 `src/core/auth.js` 处理，
+ *       因此不再包含主站的用户登录态、昵称 Cookie、跳转个人主页等逻辑。
+ */
 
 // ========== 深色/浅色主题切换 ==========
 
@@ -126,23 +81,8 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
   }
 });
 
-/**
- * 绑定用户名点击跳转到个人主页
- */
-function bindUsernameClick() {
-  const displayName = document.getElementById('globalDisplayName');
-  if (displayName) {
-    displayName.style.cursor = 'pointer';
-    displayName.addEventListener('click', () => {
-      window.location.href = '/account.html';
-    });
-  }
-}
-
-// 页面加载完成后执行
+// 页面加载完成后初始化主题
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   bindThemeToggle();
-  bindUsernameClick();
-  updateHeaderAuth();
 });
