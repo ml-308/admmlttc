@@ -42,9 +42,15 @@ export async function onRequestPost({ request, env }) {
       });
     }
 
-    const { email, password } = body;
+    const { email, password, adminToken } = body;
     if (!email || !password) {
       return new Response(JSON.stringify({ success: false, message: '账号和密码不能为空' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    if (!adminToken || !String(adminToken).trim()) {
+      return new Response(JSON.stringify({ success: false, message: '请输入管理员令牌' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
@@ -55,11 +61,11 @@ export async function onRequestPost({ request, env }) {
     let user;
     if (input.includes('@')) {
       user = await env.mlttcd.prepare(
-        'SELECT id, email, NAME, password, adm FROM USER WHERE email = ?'
+        'SELECT id, email, NAME, password, adm, TAK FROM USER WHERE email = ?'
       ).bind(input.toLowerCase()).first();
     } else {
       user = await env.mlttcd.prepare(
-        'SELECT id, email, NAME, password, adm FROM USER WHERE NAME = ?'
+        'SELECT id, email, NAME, password, adm, TAK FROM USER WHERE NAME = ?'
       ).bind(input).first();
     }
 
@@ -70,9 +76,9 @@ export async function onRequestPost({ request, env }) {
       });
     }
 
-    // 验证管理员权限：adm 不为 'user' 即为管理员，adm 列的值即管理令牌
-    if (!user.adm || user.adm === 'user') {
-      return new Response(JSON.stringify({ success: false, message: '无管理员权限' }), {
+    // 验证管理员权限：adm 列严格等于 'adm' 才判定为管理员
+    if (!user.adm || String(user.adm).trim().toLowerCase() !== 'adm') {
+      return new Response(JSON.stringify({ success: false, message: '该账号无管理员权限' }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' }
       });
@@ -83,6 +89,14 @@ export async function onRequestPost({ request, env }) {
     if (!isPasswordValid) {
       return new Response(JSON.stringify({ success: false, message: '管理员账号或密码错误' }), {
         status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 验证管理员令牌：与 USER.TAK 列比对（宽松比较以兼容类型差异）
+    if (!user.TAK || user.TAK != String(adminToken).trim()) {
+      return new Response(JSON.stringify({ success: false, message: '管理员令牌错误' }), {
+        status: 403,
         headers: { 'Content-Type': 'application/json' }
       });
     }

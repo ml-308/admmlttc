@@ -78,11 +78,11 @@
             loginBtn.textContent = '验证中...';
 
             try {
-                // 第一步：调用管理员登录 API（服务端校验邮箱密码 + 管理员权限）
+                // 调用管理员登录 API：服务端统一校验邮箱密码、adm 列权限与 TAK 管理员令牌
                 const res = await fetch('/api/admin-login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password, adminToken: token })
                 });
 
                 const data = await res.json();
@@ -97,37 +97,6 @@
                 // 保存 JWT 到 sessionStorage（后续用 Authorization 头发送，绕开 Safari Cookie 限制）
                 sessionStorage.setItem('admin_token', data.token);
                 sessionStorage.setItem('admin_email', data.email || email);
-
-                // 第二步：获取用户档案，校验管理员令牌
-                const adminToken = sessionStorage.getItem('admin_token');
-                const profileRes = await fetch('/api/profile', {
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
-                });
-
-                if (!profileRes.ok) {
-                    let errorInfo = '';
-                    try {
-                        const errorBody = await profileRes.clone().json();
-                        errorInfo = JSON.stringify(errorBody);
-                    } catch {
-                        errorInfo = await profileRes.clone().text();
-                    }
-                    showError(`获取用户信息失败 (${profileRes.status}): ${errorInfo}`);
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = '验证身份';
-                    return;
-                }
-
-                const profileData = await profileRes.json();
-                const user = profileData.user || profileData;
-
-                // 校验管理员令牌是否与 USER.adm 匹配（使用宽松比较以兼容类型差异）
-                if (!user.adm || user.adm != token) {
-                    showError('管理员令牌错误');
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = '验证身份';
-                    return;
-                }
 
                 // 验证通过，保存管理员登录状态
                 sessionStorage.setItem('admin_logged_in', 'true');

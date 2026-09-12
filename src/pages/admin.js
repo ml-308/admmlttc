@@ -63,7 +63,7 @@ async function loadProfile() {
 
     profileName.textContent = user.NAME || '未设置';
     profileEmail.textContent = user.email || '—';
-    profileRole.textContent = user.adm && user.adm !== 'user' ? '管理员' : '普通用户';
+    profileRole.textContent = user.adm && String(user.adm).trim().toLowerCase() === 'adm' ? '管理员' : '普通用户';
 
     profileLoading.classList.add('hidden');
     profileContent.classList.remove('hidden');

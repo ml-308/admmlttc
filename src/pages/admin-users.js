@@ -109,8 +109,9 @@ function renderPage() {
     card.className = 'result-item';
     card.style.animationDelay = `${idx * 0.05}s`;
 
-    const roleText = user.adm && user.adm !== 'user' ? '管理员' : '普通用户';
-    const roleColor = user.adm && user.adm !== 'user' ? 'var(--success)' : 'var(--text-muted)';
+    const isAdmin = !!user.adm && String(user.adm).trim().toLowerCase() === 'adm';
+    const roleText = isAdmin ? '管理员' : '普通用户';
+    const roleColor = isAdmin ? 'var(--success)' : 'var(--text-muted)';
 
     card.innerHTML = `
       <div class="result-item-header">
