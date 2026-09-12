@@ -8,8 +8,8 @@
  *       /lib/ui/popup.mjs（确认弹窗）
  */
 import { showPrompt } from '/lib/ui/popup.mjs';
-import { requireAdminSession, getAdminEmail, clearAdminSession } from '../core/auth';
-import { showMessage } from '../utils/toast';
+import { requireAdminSession, getAdminEmail, clearAdminSession } from '../core/auth.js';
+import { showMessage } from '../utils/toast.js';
 
 // ─── 登录态守卫 + 头部邮箱展示 ─────────────────────────────
 const adminPayload = requireAdminSession();

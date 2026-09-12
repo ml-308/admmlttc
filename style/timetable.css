@@ -887,6 +887,16 @@ footer::before {
     color: var(--text-muted);
 }
 
+/* 头部导航按钮：hcw-button 的可见样式在阴影 DOM 内，不继承宿主配色，
+   浅色主题下会出现「深底深字」，这里通过组件变量覆盖为反白玻璃效果 */
+hcw-body-header hcw-button,
+[hcw-body-header] hcw-button {
+    --button-bg: rgba(255, 255, 255, 0.14);
+    --button-bg-hl: rgba(255, 255, 255, 0.24);
+    --button-color: var(--nav-text);
+    --button-color-hl: #ffffff;
+}
+
 /* 头部登录邮箱显示 */
 .header-email {
     font-size: 0.82rem;

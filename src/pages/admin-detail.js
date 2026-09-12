@@ -6,11 +6,15 @@
  *
  * 依赖：src/core/auth.js（登录态守卫）、src/utils/toast.js（轻提示）
  */
-import { requireAdminSession } from '../core/auth';
-import { showMessage } from '../utils/toast';
+import { requireAdminSession, getAdminEmail } from '../core/auth.js';
+import { showMessage } from '../utils/toast.js';
 
-// ─── 登录态守卫：未登录或 token 过期时清理会话并跳转登录页 ──
-requireAdminSession();
+// ─── 登录态守卫 + 头部邮箱展示 ─────────────────────────────
+const adminPayload = requireAdminSession();
+if (adminPayload) {
+  const el = document.getElementById('adminEmailDisplay');
+  if (el) el.textContent = adminPayload.email || getAdminEmail();
+}
 
 const backBtn = document.getElementById('back-btn');
 const detailBackBtn = document.getElementById('detail-back-btn');

@@ -6,8 +6,8 @@
  *
  * 依赖：src/core/auth.js（登录态守卫）、src/utils/toast.js（轻提示）
  */
-import { requireAdminSession, getAdminEmail, clearAdminSession } from '../core/auth';
-import { showMessage } from '../utils/toast';
+import { requireAdminSession, getAdminEmail, clearAdminSession } from '../core/auth.js';
+import { showMessage } from '../utils/toast.js';
 
 // ─── 登录态守卫 + 头部邮箱展示 ─────────────────────────────
 const adminPayload = requireAdminSession();

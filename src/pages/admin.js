@@ -6,8 +6,8 @@
  *
  * 依赖：src/core/auth.js（登录态守卫）、src/utils/role.js（身份文案）
  */
-import { requireAdminSession, getAdminEmail, clearAdminSession, getAdminToken } from '../core/auth';
-import { getRoleInfo } from '../utils/role';
+import { requireAdminSession, getAdminEmail, clearAdminSession, getAdminToken } from '../core/auth.js';
+import { getRoleInfo } from '../utils/role.js';
 
 // ─── 登录态守卫 + 头部邮箱展示 ─────────────────────────────
 const adminPayload = requireAdminSession();
