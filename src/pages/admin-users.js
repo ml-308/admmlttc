@@ -109,9 +109,12 @@ function renderPage() {
     card.className = 'result-item';
     card.style.animationDelay = `${idx * 0.05}s`;
 
-    const isAdmin = !!user.adm && String(user.adm).trim().toLowerCase() === 'adm';
-    const roleText = isAdmin ? '管理员' : '普通用户';
-    const roleColor = isAdmin ? 'var(--success)' : 'var(--text-muted)';
+    // 身份：adm = 'adm' → 管理员；adm = 'STATION' → 站长（紫底白字）；其他 → 普通用户
+    const admValue = String(user.adm || '').trim().toLowerCase();
+    const roleText = admValue === 'adm' ? '管理员' : admValue === 'station' ? '站长' : '普通用户';
+    const roleClass = admValue === 'adm' ? 'role-badge role-admin'
+      : admValue === 'station' ? 'role-badge role-station'
+        : 'role-badge role-user';
 
     card.innerHTML = `
       <div class="result-item-header">
@@ -121,7 +124,7 @@ function renderPage() {
       <div class="result-item-body">
         <div class="result-item-meta" style="display:flex; flex-wrap:wrap; gap:8px;">
           <span>${user.email || '—'}</span>
-          <span style="font-weight:600; color:${roleColor};">${roleText}</span>
+          <span class="${roleClass}">${roleText}</span>
         </div>
       </div>
     `;

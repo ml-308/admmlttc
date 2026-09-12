@@ -76,8 +76,8 @@ export async function onRequestPost({ request, env }) {
       });
     }
 
-    // 验证管理员权限：adm 列严格等于 'adm' 才判定为管理员
-    if (!user.adm || String(user.adm).trim().toLowerCase() !== 'adm') {
+    // 验证管理员权限：adm 列严格等于 'adm' 或 'STATION' 才判定为管理员
+    if (!user.adm || (String(user.adm).trim().toLowerCase() !== 'adm' && String(user.adm).trim().toLowerCase() !== 'STATION')) {
       return new Response(JSON.stringify({ success: false, message: '该账号无管理员权限' }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' }

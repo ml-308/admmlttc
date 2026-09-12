@@ -133,6 +133,29 @@
     }
 }
 
+/* ---------- 身份标签 ---------- */
+.role-badge {
+    display: inline-block;
+    font-weight: 600;
+    line-height: 1.7;
+    border-radius: var(--radius-full);
+}
+
+.role-badge.role-admin {
+    color: var(--success);
+}
+
+/* 站长：紫底白字 */
+.role-badge.role-station {
+    color: #ffffff;
+    background-color: #7c3aed;
+    padding: 0 0.6rem;
+}
+
+.role-badge.role-user {
+    color: var(--text-muted);
+}
+
 @keyframes modalFadeIn {
     from {
         opacity: 0;

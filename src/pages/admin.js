@@ -63,7 +63,19 @@ async function loadProfile() {
 
     profileName.textContent = user.NAME || '未设置';
     profileEmail.textContent = user.email || '—';
-    profileRole.textContent = user.adm && String(user.adm).trim().toLowerCase() === 'adm' ? '管理员' : '普通用户';
+
+    // 身份：adm = 'adm' → 管理员；adm = 'STATION' → 站长（紫底白字）；其他 → 普通用户
+    const admValue = String(user.adm || '').trim().toLowerCase();
+    if (admValue === 'adm') {
+      profileRole.textContent = '管理员';
+      profileRole.className = 'role-badge role-admin';
+    } else if (admValue === 'station') {
+      profileRole.textContent = '站长';
+      profileRole.className = 'role-badge role-station';
+    } else {
+      profileRole.textContent = '普通用户';
+      profileRole.className = 'role-badge role-user';
+    }
 
     profileLoading.classList.add('hidden');
     profileContent.classList.remove('hidden');
