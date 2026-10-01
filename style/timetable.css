@@ -620,14 +620,6 @@ footer::before {
     border-top: 1px dashed var(--border-light);
 }
 
-[data-theme="dark"] .result-area .result-item-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border-light);
-}
-
 /* ── 查看详情按钮 (缩小版) ── */
 [data-theme="dark"] .result-area .view-detail-btn {
     display: inline-flex;
@@ -1038,6 +1030,3 @@ hcw-body-header hcw-button,
     padding-top: 1rem;
     border-top: 1px solid var(--border-light);
 }
-
-/* ---------- 审核结果操作区 ---------- */
-.result-item-actions--end { justify-content: flex-end; }

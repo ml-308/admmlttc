@@ -131,7 +131,7 @@ function backToEntrance() {
   loadReviewed();
 }
 
-// ─── 已审核时刻表（卡片 + 删除按钮） ─────────
+// ─── 已审核时刻表（卡片，点击进入详情；不提供删除） ─────────
 function createReviewedCard(item) {
   const card = document.createElement('div');
   card.className = 'result-item';
@@ -157,14 +157,7 @@ function createReviewedCard(item) {
         <span>审核: ${item.PASSER || '管理员'}</span>
       </div>
     </div>
-    <div class="result-item-actions" style="justify-content:flex-end;">
-      <hcw-button class="reviewed-delete-btn" variant="danger" flat style="min-width:4rem; font-size:0.82rem;">删除</hcw-button>
-    </div>
   `;
-  card.querySelector('.reviewed-delete-btn').addEventListener('click', e => {
-    e.stopPropagation();
-    deleteReviewedItem(item);
-  });
   card.addEventListener('click', () => { window.location.href = `/admin-detail.html?id=${encodeURIComponent(item.ID)}`; });
   return card;
 }
@@ -191,20 +184,7 @@ function loadReviewed() {
     });
 }
 
-async function deleteReviewedItem(item) {
-  if (!confirm(`确认永久删除已审核时刻表 #${item.ID}？此操作不可撤销。`)) return;
-  if (!confirm(`再次确认：删除 ${item.CITY} ${item.WAY}？`)) return;
-  try {
-    const res = await fetch('/api/admin', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.ID })
-    });
-    if (!res.ok) { const d = await res.json().catch(() => ({})); showMessage(d.message || d.error || '删除失败', true); return; }
-    showMessage('已删除', false);
-    loadReviewed();
-  } catch { showMessage('网络错误', true); }
-}
+// 说明：管理员不具备删除时刻表的能力——前端已移除删除入口，后端也不再提供 DELETE 接口。
 
 function nextReview() {
   reviewIndex++;

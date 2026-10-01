@@ -5,7 +5,6 @@
  *
  * GET    /api/timetable-D1?id=...   —— 查询单条时刻表详情（含作者昵称）
  * POST   /api/timetable-D1          —— 更新时刻表（必须带 id，仅作者本人可改）
- * DELETE /api/timetable-D1?id=...   —— 删除时刻表（仅作者本人可删）
  *
  * 说明：本文件同时包含 GET 用的 KV 频率限制与查询参数校验工具。
  */
@@ -188,38 +187,6 @@ export async function onRequestGet({request,env}){
     }
 }
 
-// ─── 删除时刻表（仅作者本人可删）────────────────────────────
-export async function onRequestDelete({ request, env }) {
-    try {
-        const body = await request.json().catch(() => null);
-        if (!body) {
-            return jsonError('无效的请求数据', 400);
-        }
-
-        const { id, writer } = body;
-        if (!id || !writer) {
-            return jsonError('参数不完整', 400);
-        }
-
-        // ── 校验记录存在且作者匹配 ────────────────────────
-        const existing = await env.mlttcd.prepare(
-            'SELECT ID, WRITER FROM TIMETABLE WHERE ID = ?'
-        ).bind(id).first();
-
-        if (!existing) {
-            return jsonError('记录不存在', 404);
-        }
-
-        if (existing.WRITER !== writer) {
-            return jsonError('无权删除此记录', 403);
-        }
-
-        await env.mlttcd.prepare('DELETE FROM TIMETABLE WHERE ID = ? AND WRITER = ?')
-            .bind(id, writer).run();
-
-        return json({ success: true, message: '删除成功' }, 200);
-    } catch (err) {
-        console.error('删除错误:', err);
-        return jsonError('删除失败', 500);
-    }
-}
+// ─── 删除能力已移除 ──────────────────────────────────────────
+// 时刻表数据不允许删除：原先的 onRequestDelete（DELETE /api/timetable-D1）已删除。
+// Pages Functions 对未导出的方法会返回 405，因此删除请求现在会直接失败。

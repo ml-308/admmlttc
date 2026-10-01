@@ -6,7 +6,6 @@
  * GET    /api/admin —— 取全部时刻表并按状态分组返回
  *                     `{ unreviewed, reviewed, rejected }`
  * POST   /api/admin —— 审核操作：`action: 'approve' | 'reject'`（或 `pass: 1`）
- * DELETE /api/admin —— 永久删除某条时刻表
  *
  * 状态字段约定：
  *   · `PASS = 1`          → 已通过
@@ -112,26 +111,6 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
-// ─── DELETE: 删除时刻表 ─────────────────────────
-export async function onRequestDelete({ request, env }) {
-  try {
-    const body = await request.json().catch(() => null);
-    const id = body?.id;
-    if (!id) {
-      return jsonError('缺少时刻表ID', 400);
-    }
-
-    const result = await env.mlttcd.prepare(
-      'DELETE FROM TIMETABLE WHERE ID = ?'
-    ).bind(id).run();
-
-    if (!result.meta || result.meta.changes === 0) {
-      return json({ message: '记录不存在' }, 404);
-    }
-
-    return json({ success: true, message: '已删除' }, 200);
-  } catch (err) {
-    console.error('管理员删除错误:', err);
-    return jsonError('服务器内部错误', 500);
-  }
-}
+// ─── 删除能力已移除 ──────────────────────────────
+// 管理员不具备删除时刻表数据的权限：原先的 onRequestDelete（DELETE /api/admin）已删除。
+// Pages Functions 对未导出的方法会返回 405，因此现在 DELETE /api/admin 会直接失败。
