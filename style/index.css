@@ -65,7 +65,7 @@
     border-color: var(--primary);
     color: var(--primary);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 113, 227, 0.14);
+    box-shadow: 0 6px 16px rgba(29, 185, 84, 0.18);
 }
 
 .admin-dashboard-grid>.dashboard-btn:active:not([disabled]) {
@@ -83,7 +83,7 @@
     border-color: transparent;
     color: var(--on-primary);
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 113, 227, 0.3);
+    box-shadow: 0 6px 18px rgba(29, 185, 84, 0.3);
 }
 
 .admin-dashboard-grid>.dashboard-btn[disabled] {
@@ -104,8 +104,8 @@
 }
 
 [data-theme="dark"] .admin-dashboard-grid>.dashboard-btn:hover:not([disabled]) {
-    background-color: rgba(41, 151, 255, 0.16);
-    border-color: rgba(41, 151, 255, 0.4);
+    background-color: rgba(29, 185, 84, 0.16);
+    border-color: rgba(29, 185, 84, 0.4);
     color: var(--primary-light);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
@@ -196,4 +196,42 @@
 [data-theme="dark"] .error-msg {
     background: rgba(255, 69, 58, 0.15);
     border-color: rgba(255, 69, 58, 0.3);
+}
+
+/* ---------- 管理端数据统计概览 ---------- */
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.9rem;
+    margin-top: 0.75rem;
+}
+
+.admin-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.9rem 0.5rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--bg-hover);
+}
+
+.admin-stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--primary);
+}
+
+.admin-stat-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 600px) {
+    .admin-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }

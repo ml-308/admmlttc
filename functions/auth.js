@@ -106,10 +106,12 @@ export function getCookie(request, name) {
 }
 
 // 设置 httpOnly Cookie（30天过期，兼容 Safari）
+// 注意：管理后台与主站（mlttc.bond）分离部署，cookie 名用 admin_auth_token
+//       与主站的 auth_token 彻底隔离，避免跨站互相覆盖导致登录失效。
 export function setAuthCookie(response, token) {
   response.headers.set(
     'Set-Cookie',
-    `auth_token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=2592000`
+    `admin_auth_token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=2592000`
   );
 }
 
@@ -117,6 +119,6 @@ export function setAuthCookie(response, token) {
 export function clearAuthCookie(response) {
   response.headers.set(
     'Set-Cookie',
-    `auth_token=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0`
+    `admin_auth_token=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0`
   );
 }

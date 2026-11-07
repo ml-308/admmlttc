@@ -49,6 +49,30 @@
             <div id="profileError" class="hidden state-error">加载失败</div>
         </hcw-card>
 
+        <!-- 数据统计概览 -->
+        <hcw-card class="mt-lg">
+            <hcw-card-title class="card-title-sm">数据统计</hcw-card-title>
+            <div class="admin-stats-grid" id="adminStatsGrid">
+                <div class="admin-stat">
+                    <span class="admin-stat-value" id="statUnreviewed">—</span>
+                    <span class="admin-stat-label">待审核</span>
+                </div>
+                <div class="admin-stat">
+                    <span class="admin-stat-value" id="statReviewed">—</span>
+                    <span class="admin-stat-label">已通过</span>
+                </div>
+                <div class="admin-stat">
+                    <span class="admin-stat-value" id="statRejected">—</span>
+                    <span class="admin-stat-label">已驳回</span>
+                </div>
+                <div class="admin-stat">
+                    <span class="admin-stat-value" id="statUsers">—</span>
+                    <span class="admin-stat-label">注册用户</span>
+                </div>
+            </div>
+            <div id="adminStatsError" class="hidden state-error">统计加载失败</div>
+        </hcw-card>
+
         <!-- 6 大功能按钮 -->
         <hcw-card class="mt-lg">
             <hcw-card-title class="card-title-sm">功能菜单</hcw-card-title>

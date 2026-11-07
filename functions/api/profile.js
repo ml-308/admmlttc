@@ -4,7 +4,7 @@
  * GET /api/profile
  *
  * 返回当前登录用户的公开档案（不含 password、TAK 等敏感列）。
- * · 身份：优先 `Authorization: Bearer`，其次 Cookie `auth_token`
+ * · 身份：优先 `Authorization: Bearer`，其次 Cookie `admin_auth_token`
  * · 响应：统一附加 CORS 凭据头，允许 mlttc.bond 前端跨域携带 Cookie 调用
  */
 import { verifyToken, clearAuthCookie } from '../auth';

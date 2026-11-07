@@ -859,7 +859,7 @@ footer::before {
 [data-theme="dark"] .pagination-bar button:hover {
     background: rgba(60, 62, 65, 0.8) !important;
     color: #ffffff !important;
-    border-color: rgba(0, 117, 242, 0.4) !important;
+    border-color: rgba(29, 185, 84, 0.4) !important;
 }
 
 [data-theme="dark"] .pagination-bar hcw-button:disabled,

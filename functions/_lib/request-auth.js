@@ -5,7 +5,7 @@
  *
  * 取 token 的优先级：
  *   1. `Authorization: Bearer <token>`（前端显式携带，绕开 Safari 的 Cookie 限制）
- *   2. Cookie 中的 `auth_token`（同域场景由 setAuthCookie 写入）
+ *   2. Cookie 中的 `admin_auth_token`（同域场景由 setAuthCookie 写入）
  */
 
 import { verifyToken, getCookie } from '../auth';
@@ -13,10 +13,10 @@ import { verifyToken, getCookie } from '../auth';
 /**
  * 取出请求携带的 token。
  * @param {Request} request
- * @param {string} [cookieName='auth_token'] Cookie 名称
+ * @param {string} [cookieName='admin_auth_token'] Cookie 名称
  * @returns {string|null} token 或 null
  */
-export function getAuthToken(request, cookieName = 'auth_token') {
+export function getAuthToken(request, cookieName = 'admin_auth_token') {
   const authHeader = request.headers.get('Authorization');
   if (authHeader && authHeader.startsWith('Bearer ')) {
     return authHeader.substring(7);

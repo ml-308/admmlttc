@@ -79,5 +79,35 @@ logoutBtn.addEventListener('click', () => {
 // ─── 返回按钮 ────────────────────────────────
 backBtn.addEventListener('click', () => window.location.href = '/index.html');
 
+// ─── 数据统计 ────────────────────────────────
+async function loadStats() {
+  const token = getAdminToken();
+  const grid = document.getElementById('adminStatsGrid');
+  if (!token || !grid) return;
+
+  try {
+    const res = await fetch('/api/admin-stats', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      document.getElementById('adminStatsError')?.classList.remove('hidden');
+      return;
+    }
+
+    const data = await res.json();
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(val);
+    };
+    set('statUnreviewed', data.unreviewed ?? 0);
+    set('statReviewed', data.reviewed ?? 0);
+    set('statRejected', data.rejected ?? 0);
+    set('statUsers', data.users ?? 0);
+  } catch {
+    document.getElementById('adminStatsError')?.classList.remove('hidden');
+  }
+}
+
 // ─── 启动 ────────────────────────────────────
 loadProfile();
+loadStats();
