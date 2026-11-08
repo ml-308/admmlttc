@@ -988,6 +988,20 @@ hcw-body-header hcw-button,
 .narrow-article {
     max-width: 32rem;
     margin: 0 auto;
+    flex: 1;                  /* body 是 min-height:100vh 的 flex column，撑满页头与页脚之间 */
+    justify-content: center;  /* 卡片在剩余高度内垂直居中，页脚不再被顶到视口底部留下大段空档 */
+}
+
+/* 桌面端（≥1024px）：main.css 的「全宽对齐」规则
+   hcw-article:not(.legal):not([style])（特异度 0,2,1）高于 .narrow-article（0,1,0），
+   会把登录页拉成整幅宽度；这里用更高特异度把窄栏行宽改回来。 */
+@media (min-width: 1024px) {
+
+    hcw-article.narrow-article:not(.legal):not([style]),
+    [hcw-article].narrow-article:not(.legal):not([style]) {
+        max-width: 32rem;
+        margin-inline: auto;
+    }
 }
 
 .self-center { align-self: center; }
