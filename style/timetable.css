@@ -1128,3 +1128,115 @@ hcw-body-header hcw-button,
     white-space: pre-wrap;
     word-break: break-word;
 }
+
+/* ============ 管理端动效补充（微交互 + 错峰入场 + 状态过渡） ============
+   1. 只复用 style/main.css 已定义的 @keyframes（fade-in / fade-up-in），本文件不新增、不重复定义；
+   2. 只新增选择器，不改动上方任何既有规则的关键值与语义；
+   3. 只动 opacity / transform / translate / scale / background-color / border-color / box-shadow / color；
+   4. 每条新增动效都由文末 prefers-reduced-motion 精确选择器关闭（不使用 * 一刀切）。
+*/
+
+/* --- 1. 结果卡片（admin-review.html 已审核列表 / admin.html 时段列表、审核工作区）
+   .result-item 的 transform 已被入场动画（cardEnter / resultItemIn）以 forwards 占用——
+   动画在层叠中高于普通声明，故悬停上移与按下微压改用独立的 translate / scale 属性，
+   既不与既有动画争夺 transform，也不改它们的进度与终值。
+   这里刻意不声明 transition：既有的 transition: all（浅色第 302 行 / 深色第 548 行）
+   已覆盖 translate / scale，新增动效沿用页面既有节奏，不改既有过渡的关键值。 */
+.result-item:hover {
+    translate: 0 -2px;
+}
+
+.result-item:active {
+    translate: 0 0;
+    scale: 0.995;
+}
+
+/* --- 2. 报告卡片（admin-detail.html 错误报告 / admin-reports.html 报告卡）：hover 背景过渡 --- */
+.report-item {
+    transition:
+        background-color var(--dur-base) var(--ease-standard),
+        border-color var(--dur-base) var(--ease-standard);
+}
+
+.report-item:hover {
+    background-color: var(--bg-hover);
+}
+
+/* --- 3. 报告列表：脚本用 DOM API 追加子项时逐条淡入，前 4 条按 --stagger-step 错峰 --- */
+.report-list>.report-item {
+    animation: fade-in var(--dur-base) var(--ease-decelerate) both;
+}
+
+.report-list>.report-item:nth-child(2) {
+    animation-delay: calc(var(--stagger-step) * 1);
+}
+
+.report-list>.report-item:nth-child(3) {
+    animation-delay: calc(var(--stagger-step) * 2);
+}
+
+.report-list>.report-item:nth-child(4) {
+    animation-delay: calc(var(--stagger-step) * 3);
+}
+
+/* --- 4. 三态切换（加载中 / 错误 / 空）：从 .hidden 切回可见时淡入
+   注：.hidden 为 display:none，display 变化会让 CSS 动画重新开始，故无需改 JS/HTML --- */
+.state-loading-lg,
+.state-error,
+.state-error-lg {
+    animation: fade-in var(--dur-base) var(--ease-standard) both;
+}
+
+/* --- 5. 审核工作区（admin-review.html）：审核入口与单条审核卡片切换时上移淡入 --- */
+#reviewEntrance,
+#reviewCard {
+    animation: fade-up-in var(--dur-base) var(--ease-decelerate) both;
+}
+
+/* --- 6. 菜单栏按钮（admin-reports.html 的状态筛选、admin-review.html 的审核入口）：选中态过渡
+   选中态由 [primary] 驱动，填充色画在 hcw-button 的 shadow DOM 内（.inner-root），
+   shadow 内的过渡取 var(--transition-fast)；自定义属性可继承进 shadow，
+   故在本作用域内把它换成 --dur-base + --ease-standard，让 background-color / color 不瞬跳。
+   宿主层同时声明同样的过渡，覆盖按钮在宿主上直接绘制的配色（如 .btn-* 变体）。 */
+.menu-bar>hcw-button,
+.menu-bar>[hcw-button] {
+    --transition-fast: var(--dur-base) var(--ease-standard);
+
+    transition:
+        background-color var(--dur-base) var(--ease-standard),
+        color var(--dur-base) var(--ease-standard),
+        box-shadow var(--dur-base) var(--ease-standard);
+}
+
+/* --- 7. 无障碍：按选择器精确关闭以上新增动效（上方既有的 0.01ms 兜底规则保持不动） --- */
+@media (prefers-reduced-motion: reduce) {
+
+    /* 结果卡片：去掉悬停上移与按下微压（既有 transition 与入场动画保持不动） */
+    .result-item:hover,
+    .result-item:active {
+        translate: none;
+        scale: none;
+    }
+
+    /* 报告卡片：状态直接跳变 */
+    .report-item {
+        transition: none;
+    }
+
+    /* 菜单栏按钮：宿主层过渡与 shadow 内过渡（经自定义属性）一并关掉 */
+    .menu-bar>hcw-button,
+    .menu-bar>[hcw-button] {
+        --transition-fast: none;
+        transition: none;
+    }
+
+    /* 入场动画：直接落到终态（这些选择器自身没有 opacity:0 基态，故不会停在不可见状态） */
+    .report-list>.report-item,
+    .state-loading-lg,
+    .state-error,
+    .state-error-lg,
+    #reviewEntrance,
+    #reviewCard {
+        animation: none;
+    }
+}
