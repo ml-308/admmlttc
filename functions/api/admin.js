@@ -13,9 +13,10 @@
  *   · 其余                → 待审核
  *   · `SPECIAL` 仅作用户备注，审核流程不再写入该列
  *
- * TODO(安全)：本接口目前依赖前端登录态，服务端未校验 JWT；
- * 若前端改为携带 `Authorization` 头，可在这里补上管理员校验。
+ * 鉴权：请求头 `Authorization: Bearer <管理员 JWT>`，payload.role 必须为 'admin'；
+ * GET 与 POST 两个导出方法均在函数体最前面校验，先于任何 D1 查询。
  */
+import { verifyToken } from '../auth';
 import { json, jsonError } from '../_lib/response';
 
 /**
@@ -30,6 +31,25 @@ function isRejected(row) {
 // ─── GET: 获取所有时刻表（已按状态分离）─────────
 export async function onRequestGet({ request, env }) {
   try {
+    // ── 1. 取并校验管理员 JWT ─────────────────────────────
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return jsonError('未授权', 401);
+    }
+
+    const token = authHeader.substring(7);
+    let payload;
+    try {
+      payload = await verifyToken(token, env.JWT_SECRET);
+    } catch {
+      return jsonError('登录已过期', 401);
+    }
+
+    // ── 2. 校验管理员身份 ─────────────────────────────────
+    if (!payload.role || payload.role !== 'admin') {
+      return jsonError('无管理员权限', 403);
+    }
+
     // 一次查询全量数据，JS 端分组，减少 2 次数据库查询
     const { results } = await env.mlttcd.prepare(
       `SELECT t.*, u.NAME as WRITER_NAME
@@ -63,6 +83,25 @@ export async function onRequestGet({ request, env }) {
 // ─── POST: 审核操作────────────────────────────
 export async function onRequestPost({ request, env }) {
   try {
+    // ── 1. 取并校验管理员 JWT ─────────────────────────────
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return jsonError('未授权', 401);
+    }
+
+    const token = authHeader.substring(7);
+    let payload;
+    try {
+      payload = await verifyToken(token, env.JWT_SECRET);
+    } catch {
+      return jsonError('登录已过期', 401);
+    }
+
+    // ── 2. 校验管理员身份 ─────────────────────────────────
+    if (!payload.role || payload.role !== 'admin') {
+      return jsonError('无管理员权限', 403);
+    }
+
     const body = await request.json().catch(() => null);
     if (!body) {
       return jsonError('无效的请求数据', 400);

@@ -8,7 +8,7 @@
  *       /lib/ui/popup.mjs（确认弹窗）
  */
 import { showPrompt } from '/lib/ui/popup.mjs';
-import { requireAdminSession, getAdminEmail, clearAdminSession } from '../core/auth.js';
+import { requireAdminSession, getAdminEmail, getAdminToken, clearAdminSession } from '../core/auth.js';
 import { showMessage } from '../utils/toast.js';
 
 // ─── 登录态守卫 + 头部邮箱展示 ─────────────────────────────
@@ -544,7 +544,10 @@ async function submitEdit() {
   try {
     const response = await fetch('/api/timetable-D1', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAdminToken()}`
+      },
       body: JSON.stringify(postData)
     });
 
@@ -585,7 +588,8 @@ async function loadData() {
 
   try {
     const res = await fetch(`/api/timetable-D1?id=${encodeURIComponent(id)}`, {
-      credentials: 'include'
+      credentials: 'include',
+      headers: { 'Authorization': `Bearer ${getAdminToken()}` }
     });
 
     if (!res.ok) {

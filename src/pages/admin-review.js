@@ -6,7 +6,7 @@
  *
  * 依赖：src/core/auth.js（登录态守卫）、src/utils/toast.js（轻提示）
  */
-import { requireAdminSession, getAdminEmail, clearAdminSession } from '../core/auth.js';
+import { requireAdminSession, getAdminEmail, getAdminToken, clearAdminSession } from '../core/auth.js';
 import { showMessage } from '../utils/toast.js';
 
 // ─── 登录态守卫 + 头部邮箱展示 ─────────────────────────────
@@ -59,6 +59,17 @@ let processing = false; // 防止重复点击
 
 // ─── 工具 ────────────────────────────────────
 // 轻提示 showMessage 已抽到 src/utils/toast.js（见文件顶部 import）
+
+/**
+ * 构造审核接口的鉴权头（/api/admin 服务端要求 Authorization: Bearer <JWT>）。
+ * @param {Record<string, string>} [extra] 需合并的额外头（如 Content-Type）
+ * @returns {Record<string, string>|null} token 缺失时返回 null
+ */
+function adminAuthHeaders(extra = {}) {
+  const token = getAdminToken();
+  if (!token) return null;
+  return { 'Authorization': `Bearer ${token}`, ...extra };
+}
 
 // ─── 渲染当前待审核时刻表详情（参考 mlttc 搜索详情页） ──
 function renderTimeChips(container, timeStr) {
@@ -166,8 +177,19 @@ function loadReviewed() {
   reviewedLoading.classList.remove('hidden');
   reviewedEmpty.classList.add('hidden');
   reviewedList.innerHTML = '';
-  fetch('/api/admin', { credentials: 'include' })
-    .then(res => res.json().catch(() => ({})))
+
+  const headers = adminAuthHeaders();
+  if (!headers) {
+    reviewedLoading.textContent = '登录已失效，请重新登录';
+    return;
+  }
+
+  fetch('/api/admin', { credentials: 'include', headers })
+    .then(res => {
+      if (res.status === 401 || res.status === 403) throw new Error('登录已失效，请重新登录');
+      if (!res.ok) throw new Error('加载失败，请重试');
+      return res.json().catch(() => ({}));
+    })
     .then(json => {
       reviewedLoading.classList.add('hidden');
       const reviewed = (json.success && Array.isArray(json.reviewed)) ? json.reviewed : [];
@@ -178,9 +200,9 @@ function loadReviewed() {
       }
       reviewed.forEach(item => reviewedList.appendChild(createReviewedCard(item)));
     })
-    .catch(() => {
-      reviewedLoading.classList.add('hidden');
-      reviewedLoading.textContent = '加载失败，请重试';
+    .catch(err => {
+      // 保留 loading 元素可见，避免鉴权/网络失败时列表静默空白
+      reviewedLoading.textContent = (err && err.message) ? err.message : '加载失败，请重试';
     });
 }
 
@@ -206,7 +228,14 @@ startReviewBtn.addEventListener('click', async () => {
   reviewLoading.textContent = '加载中...';
 
   try {
-    const res = await fetch('/api/admin', { credentials: 'include' });
+    const headers = adminAuthHeaders();
+    if (!headers) {
+      reviewLoading.textContent = '登录已失效，请重新登录';
+      showMessage('登录已失效，请重新登录', true);
+      return;
+    }
+
+    const res = await fetch('/api/admin', { credentials: 'include', headers });
     const json = await res.json().catch(() => ({}));
     const unreviewed = (res.ok && json.success) ? (json.unreviewed || []) : [];
 
@@ -237,7 +266,7 @@ approveBtn.addEventListener('click', async () => {
   try {
     const res = await fetch('/api/admin', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ id: item.ID, passer: adminEmail, pass: 1 })
     });
     const data = await res.json().catch(() => ({}));
@@ -271,7 +300,7 @@ rejectBtn.addEventListener('click', async () => {
   try {
     const res = await fetch('/api/admin', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ id: item.ID, passer: adminEmail, action: 'reject' })
     });
     const d = await res.json().catch(() => ({}));

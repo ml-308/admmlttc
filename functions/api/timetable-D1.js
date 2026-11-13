@@ -8,10 +8,29 @@
  *
  * 说明：本文件同时包含 GET 用的 KV 频率限制与查询参数校验工具。
  */
+import { verifyToken } from '../auth';
 import { json, jsonError } from '../_lib/response';
 import { checkRateLimit as sharedCheckRateLimit } from '../_lib/rate-limit';
 
 export async function onRequestPost({ request, env }) {
+    // ─── 管理员鉴权：先于 request.json() 与任何 D1 查询 ──────────
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return jsonError('未授权', 401);
+    }
+
+    const token = authHeader.substring(7);
+    let payload;
+    try {
+        payload = await verifyToken(token, env.JWT_SECRET);
+    } catch {
+        return jsonError('登录已过期', 401);
+    }
+
+    if (!payload.role || payload.role !== 'admin') {
+        return jsonError('无管理员权限', 403);
+    }
+
     const body = await request.json().catch(() => null);
     if (!body) {
         return jsonError('无效的请求数据', 400);
@@ -142,6 +161,24 @@ function validateSearchParam(value, maxLen) {
 
 //Get
 export async function onRequestGet({request,env}){
+    // ─── 管理员鉴权：先于限流与任何 D1 查询 ────────────────
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return jsonError('未授权', 401);
+    }
+
+    const token = authHeader.substring(7);
+    let payload;
+    try {
+        payload = await verifyToken(token, env.JWT_SECRET);
+    } catch {
+        return jsonError('登录已过期', 401);
+    }
+
+    if (!payload.role || payload.role !== 'admin') {
+        return jsonError('无管理员权限', 403);
+    }
+
     try {
         // 1. 频率限制检查
         const rateLimitResponse = await checkRateLimit(request, env);

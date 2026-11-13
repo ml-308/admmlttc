@@ -177,7 +177,8 @@ async function loadDetail() {
 
   try {
     const res = await fetch(`/api/timetable-D1?id=${encodeURIComponent(id)}`, {
-      credentials: 'include'
+      credentials: 'include',
+      headers: { 'Authorization': `Bearer ${getAdminToken()}` }
     });
     if (!res.ok) throw new Error('请求失败');
     const json = await res.json();
