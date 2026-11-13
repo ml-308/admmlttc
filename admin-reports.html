@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>管理员 - 错误报告</title>
+    <link rel="stylesheet" href="style/index.css">
+    <link rel="stylesheet" href="style/timetable.css">
+    <!-- .detail-meta-row / .detail-meta-value 等复用于报告卡片里的处理信息 -->
+    <link rel="stylesheet" href="style/timetable-detail.css">
+    <script src="lib/ui/init.mjs" type="module"></script>
+    <script src="/src/auth-header.js" type="module"></script>
+</head>
+
+<body>
+    <hcw-body-header>
+        <hcw-button flat fill class="btn-min-md" id="backBtn">返回</hcw-button>
+        <div class="logo-area">
+            <div class="logo-text">MLTTC - 错误报告</div>
+        </div>
+        <p hidden-on-mobile class="header-note">管理员面板</p>
+        <div id="headerAuthArea">
+            <hcw-button id="themeToggleBtn" flat icon large aria-label="切换主题">🌙</hcw-button>
+            <span class="header-email" id="adminEmailDisplay"></span>
+            <hcw-button id="logoutBtn" flat class="btn-min-sm btn-sm">退出</hcw-button>
+        </div>
+    </hcw-body-header>
+
+    <hcw-article>
+        <hcw-card>
+            <hcw-card-title class="card-title-row">
+                <span>错误报告</span>
+                <span id="reportCount" class="meta-count">—</span>
+            </hcw-card-title>
+
+            <!-- 状态筛选：选中项带 primary 属性（见 src/pages/admin-reports.js 的 setActiveFilter） -->
+            <div class="menu-bar mt-sm">
+                <hcw-button id="filterOpen" primary flat>待处理</hcw-button>
+                <hcw-button id="filterResolved" flat>已处理</hcw-button>
+                <hcw-button id="filterAll" flat>全部</hcw-button>
+            </div>
+
+            <!-- 三态：加载中 / 错误 / 空 -->
+            <div id="reportLoading" class="state-loading-lg mt-sm">加载中...</div>
+            <div id="reportError" class="hidden state-error"></div>
+            <div id="reportEmpty" class="hidden state-loading-lg">暂无待处理的错误报告</div>
+
+            <!-- 报告列表：每张卡片由脚本用 DOM API 构建（用户正文只用 textContent） -->
+            <div id="reportList" class="report-list mt-sm"></div>
+        </hcw-card>
+    </hcw-article>
+
+    <hcw-body-footer></hcw-body-footer>
+
+    <script src="/src/pages/admin-reports.js" type="module"></script>
+</body>
+
+</html>
