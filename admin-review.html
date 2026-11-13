@@ -43,7 +43,8 @@
                 </hcw-card-title>
                 <div id="reviewedLoading" class="state-loading-lg">加载中...</div>
                 <div id="reviewedEmpty" class="hidden state-loading-lg">暂无已审核时刻表</div>
-                <div id="reviewedList" class="result-area result-list mt-sm"></div>
+                <!-- 卡片网格：≥601px 两列铺满、≤600px 单列（见 style/timetable.css 的 .result-list--grid） -->
+                <div id="reviewedList" class="result-area result-list result-list--grid mt-sm"></div>
             </hcw-card>
         </div>
 

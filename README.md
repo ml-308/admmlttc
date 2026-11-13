@@ -8,7 +8,7 @@ MLTTC 管理员站点（Cloudflare Pages + D1 + KV）。
 functions/      Pages Functions（后端）
   _middleware.js      全站请求限制中间件
   _lib/               公共模块：response / password / request-auth / rate-limit
-  api/                接口：admin-login、admin、admin-users、profile、timetable-D1、test
+  api/                接口：admin-login、admin、admin-users、admin-reports、profile、timetable-D1、test
 src/            前端脚本
   core/auth.js        管理端会话与 JWT
   utils/              toast（轻提示）、role（身份文案）
@@ -32,3 +32,17 @@ lib/ui/         自定义元素（hcw-button 等，Shadow DOM）
 - 另有接口级限流：`GET /api/timetable-D1?id=` 为 1 分钟 30 次。
 - 调整额度：修改 `functions/_middleware.js` 的 `pickLimit()`（或接口内的 `checkRateLimit()` 参数）。
 - 公共实现：`functions/_lib/rate-limit.js`；未绑定 KV 或 KV 异常时**自动放行**，保证站点可用性。
+
+## 错误报告（v1.4.0）
+
+主站的时刻表详情页新增「错误报告」入口，用户提交的错误说明写入 D1 表 `TIMETABLE_REPORT`
+（建表 SQL 在**主站仓库** `functions/TIMETABLE_REPORT.sql`，需在 D1 控制台执行一次）。
+本仓库负责查看：
+
+- 接口：`GET /api/admin-reports?id=<时刻表ID>`，需 `Authorization: Bearer <管理员 JWT>` 且
+  `payload.role === 'admin'`；返回 `{ success, reports: [{ ID, EMAIL, CONTENT, STATUS, WRITETIME }] }`
+  （按 `WRITETIME` 倒序，最多 100 条）。
+- 页面：`admin-detail.html` 底部的「错误报告」卡片，逐条显示提交时间、报告人、内容与状态
+  （`open` 待处理 / `handled` 已处理）。没有报告时显示空态。
+- 若该表尚未创建，接口**不返回 500**，而是 200 + 空列表 + `note`，页面显示
+  「暂无错误报告（错误报告查询失败…）」，避免整块页面报错。

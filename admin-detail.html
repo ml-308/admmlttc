@@ -96,6 +96,17 @@
 					<span class="detail-meta-value" id="detail-passer"></span>
 				</div>
 			</div>
+			<!-- 错误报告：主站用户提交的错误报告（数据来自 TIMETABLE_REPORT 表） -->
+			<hcw-card class="mt-lg">
+				<hcw-card-title class="card-title-row">
+					<span>错误报告</span>
+					<span id="reports-count" class="meta-count">— 条</span>
+				</hcw-card-title>
+				<div id="reports-loading" class="state-loading-lg">加载中...</div>
+				<div id="reports-empty" class="state-loading-lg hidden">暂无错误报告</div>
+				<div id="reports-error" class="state-error-lg hidden">无法加载错误报告</div>
+				<div id="reports-list" class="report-list"></div>
+			</hcw-card>
 			<div class="btn-group detail-actions">
 				<hcw-button id="detail-back-btn" flat class="btn-min-xl">返回审核面板</hcw-button>
 			</div>
