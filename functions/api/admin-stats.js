@@ -9,9 +9,12 @@
  *   · rejected   —— 已驳回时刻表数
  *   · users      —— 注册用户数
  *
- * 鉴权：请求头 `Authorization: Bearer <管理员 JWT>`，payload.role 必须为 'admin'。
+ * 鉴权：请求头 `Authorization: Bearer <管理员 JWT>`，payload.role 必须为 'admin'
+ * （校验逻辑见 `../_lib/auth-guard.js` 的 `requireAdmin`）。
+ *
+ * D1 往返次数：两条查询装进同一个 `batch()`，2 次往返 → 1 次（语句数与结果不变）。
  */
-import { verifyToken } from '../auth';
+import { requireAdmin } from '../_lib/auth-guard';
 import { json, jsonError } from '../_lib/response';
 
 /** 判断某条记录是否「被驳回」 */
@@ -21,26 +24,18 @@ function isRejected(row) {
 
 export async function onRequestGet({ request, env }) {
   try {
-    // ── 1. 鉴权 ───────────────────────────────────────────
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return jsonError('未授权', 401);
-    }
-    const token = authHeader.substring(7);
-    let payload;
-    try {
-      payload = await verifyToken(token, env.JWT_SECRET);
-    } catch {
-      return jsonError('登录已过期', 401);
-    }
-    if (!payload.role || payload.role !== 'admin') {
-      return jsonError('无管理员权限', 403);
-    }
+    // ── 1. 鉴权（Bearer + JWT + role === 'admin'）──────────
+    const auth = await requireAdmin(request, env);
+    if (!auth.ok) return auth.response;
 
-    // ── 2. 时刻表状态统计 ─────────────────────────────────
-    const { results } = await env.mlttcd.prepare(
-      'SELECT PASS, BACK FROM TIMETABLE'
-    ).all();
+    // ── 2. 时刻表状态统计 + 3. 用户数（同一批，只跑一次往返）──
+    //    两条都是只读语句，放进 batch 既不改变结果，也不会引入写操作。
+    const [statusResult, userResult] = await env.mlttcd.batch([
+      env.mlttcd.prepare('SELECT PASS, BACK FROM TIMETABLE'),
+      env.mlttcd.prepare('SELECT COUNT(*) AS cnt FROM USER')
+    ]);
+
+    const results = (statusResult && statusResult.results) || [];
 
     let unreviewed = 0, reviewed = 0, rejected = 0;
     for (const row of results) {
@@ -49,11 +44,8 @@ export async function onRequestGet({ request, env }) {
       else unreviewed++;
     }
 
-    // ── 3. 用户数 ─────────────────────────────────────────
-    const userRows = await env.mlttcd.prepare(
-      'SELECT COUNT(*) AS cnt FROM USER'
-    ).first();
-    const users = userRows ? (userRows.cnt || 0) : 0;
+    const userRow = (userResult && userResult.results && userResult.results[0]) || null;
+    const users = userRow ? (userRow.cnt || 0) : 0;
 
     return json({
       success: true,

@@ -10,7 +10,6 @@
  */
 import { verifyToken } from '../auth';
 import { json, jsonError } from '../_lib/response';
-import { checkRateLimit as sharedCheckRateLimit } from '../_lib/rate-limit';
 
 export async function onRequestPost({ request, env }) {
     // ─── 管理员鉴权：先于 request.json() 与任何 D1 查询 ──────────
@@ -145,11 +144,9 @@ export async function onRequestPost({ request, env }) {
 }
 
 // ─── 频率限制辅助 ─────────────────────────────────────────────
-// 详情查询限流：1 分钟 30 次。
-// 实现见 `_lib/rate-limit.js`；全站中间件（`functions/_middleware.js`）另有一层更宽松的限制。
-function checkRateLimit(request, env) {
-    return sharedCheckRateLimit(request, env, { key: 'timetable-detail', max: 30, windowSeconds: 60 });
-}
+// 已移除：详情查询的「1 分钟 30 次」KV 限流不再需要。
+// 原因见 onRequestGet 里的说明（纯读、KV 写额度只有 1000/天）；
+// 连行不再有调用方，本地辅助函数与 `_lib/rate-limit` 的 import 一并删除。
 
 // ─── 参数校验辅助 ─────────────────────────────────────────────
 function validateSearchParam(value, maxLen) {
@@ -180,9 +177,9 @@ export async function onRequestGet({request,env}){
     }
 
     try {
-        // 1. 频率限制检查
-        const rateLimitResponse = await checkRateLimit(request, env);
-        if (rateLimitResponse) return rateLimitResponse;
+        // 不再做 KV 限流：本接口是纯读（管理端查看详情），而 KV 免费额度「写」只有 1000/天，
+        // 每次详情查看消耗一次读+写会先把这个额度烧完；读请求的滥用交给 Cloudflare 面板的 WAF。
+        // 写路径（onRequestPost）的管理员鉴权仍然保留，不受影响。
 
         const url = new URL(request.url);
         const id = url.searchParams.get("id");

@@ -14,9 +14,13 @@
  *   · `SPECIAL` 仅作用户备注，审核流程不再写入该列
  *
  * 鉴权：请求头 `Authorization: Bearer <管理员 JWT>`，payload.role 必须为 'admin'；
- * GET 与 POST 两个导出方法均在函数体最前面校验，先于任何 D1 查询。
+ * GET 与 POST 两个导出方法均在函数体最前面校验，先于任何 D1 查询
+ * （校验逻辑见 `../_lib/auth-guard.js` 的 `requireAdmin`）。
+ *
+ * D1 查询点数：GET 1 次、POST 通过 1 次、POST 驳回 1 次（驳回原先要先 SELECT
+ * 再 UPDATE，现改为单条 UPDATE + `meta.changes` 判断，少一次往返）。
  */
-import { verifyToken } from '../auth';
+import { requireAdmin } from '../_lib/auth-guard';
 import { json, jsonError } from '../_lib/response';
 
 /**
@@ -31,26 +35,16 @@ function isRejected(row) {
 // ─── GET: 获取所有时刻表（已按状态分离）─────────
 export async function onRequestGet({ request, env }) {
   try {
-    // ── 1. 取并校验管理员 JWT ─────────────────────────────
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return jsonError('未授权', 401);
-    }
+    // ── 鉴权（Bearer + JWT + role === 'admin'）─────────────
+    const auth = await requireAdmin(request, env);
+    if (!auth.ok) return auth.response;
 
-    const token = authHeader.substring(7);
-    let payload;
-    try {
-      payload = await verifyToken(token, env.JWT_SECRET);
-    } catch {
-      return jsonError('登录已过期', 401);
-    }
-
-    // ── 2. 校验管理员身份 ─────────────────────────────────
-    if (!payload.role || payload.role !== 'admin') {
-      return jsonError('无管理员权限', 403);
-    }
-
-    // 一次查询全量数据，JS 端分组，减少 2 次数据库查询
+    // 一次查询全量数据，JS 端分组，减少 2 次数据库查询。
+    // 未拆成「待审核 / 已审核」两次 WHERE 查询的原因：TIMETABLE 上没有 PASS/BACK
+    // 索引，两次带 WHERE 的查询在 D1 里都是全表扫描（计费按扫描行数算），
+    // 读的行数与一次全表查相同、查询点数却翻倍；且 `PASS === 1`（JS 严格相等）
+    // 与 `PASS = 1`（SQLite 亲和性比较）在异常存值下不等价，拆分会让分组结果漂移。
+    // 返回列也不能裁：行对象原样返回给管理页，裁列即改契约。
     const { results } = await env.mlttcd.prepare(
       `SELECT t.*, u.NAME as WRITER_NAME
        FROM TIMETABLE t
@@ -83,24 +77,9 @@ export async function onRequestGet({ request, env }) {
 // ─── POST: 审核操作────────────────────────────
 export async function onRequestPost({ request, env }) {
   try {
-    // ── 1. 取并校验管理员 JWT ─────────────────────────────
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return jsonError('未授权', 401);
-    }
-
-    const token = authHeader.substring(7);
-    let payload;
-    try {
-      payload = await verifyToken(token, env.JWT_SECRET);
-    } catch {
-      return jsonError('登录已过期', 401);
-    }
-
-    // ── 2. 校验管理员身份 ─────────────────────────────────
-    if (!payload.role || payload.role !== 'admin') {
-      return jsonError('无管理员权限', 403);
-    }
+    // ── 鉴权（Bearer + JWT + role === 'admin'）─────────────
+    const auth = await requireAdmin(request, env);
+    if (!auth.ok) return auth.response;
 
     const body = await request.json().catch(() => null);
     if (!body) {
@@ -127,18 +106,17 @@ export async function onRequestPost({ request, env }) {
     }
 
     // ── 驳回：BACK=1 作为驳回标记，SPECIAL 保持不变，PASS 保持 0 ──
+    // 先 SELECT 再 UPDATE 会产生两次往返；这里直接用 UPDATE 的
+    // `meta.changes` 判断记录是否存在（与上面「通过」分支同一写法）。
+    // 记录不存在时 UPDATE 命中 0 行，不产生任何数据改动，仍返回同一个 404。
     if (action === 'reject') {
-      const existing = await env.mlttcd.prepare(
-        'SELECT ID FROM TIMETABLE WHERE ID = ?'
-      ).bind(id).first();
-
-      if (!existing) {
-        return jsonError('记录不存在', 404);
-      }
-
-      await env.mlttcd.prepare(
+      const result = await env.mlttcd.prepare(
         'UPDATE TIMETABLE SET PASS = 0, BACK = 1, PASSER = ? WHERE ID = ?'
       ).bind(passer || '管理员', id).run();
+
+      if (!result.meta || result.meta.changes === 0) {
+        return jsonError('记录不存在', 404);
+      }
 
       return json({ success: true, message: '已驳回' }, 200);
     }

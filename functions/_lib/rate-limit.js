@@ -3,16 +3,25 @@
  * ─────────────────────────────────────────────────────────────
  * 基于 KV 的轻量请求频率限制（全站通用）。
  *
+ * ⚠️ 成本：每次 `checkRateLimit()` = **1 次 KV 读 + 1 次 KV 写**。
+ * Cloudflare KV 免费额度：读 10 万/天、**写仅 1000/天**，所以调用点必须克制。
+ *
+ * 当前调用方（只有这两处，新增调用前先算一遍每日 KV 写入量）：
+ *   1. `functions/_middleware.js` —— 仅「登录接口」与「写操作（POST/PUT/DELETE/PATCH）」；
+ *      GET 读请求、HTML 页面导航、静态资源全部跳过，不再产生 KV 读写。
+ *   2. `functions/api/timetable-D1.js` —— 详情查询 `timetable-detail`（30 次/分钟，仍算读请求）。
+ *      这是历史遗留的读请求限流，本次未改动（不在改动边界内）。
+ *
  * 设计要点：
  * 1. **失败放行**：未绑定 KV 或 KV 读写异常时返回 null（不拦截），
  *    避免限流组件本身把站点打挂。
  * 2. **固定窗口计数**：窗口内计数超过阈值才拦截，KV 写入不 await，
  *    不阻塞响应；`expirationTtl` 设为窗口的 2 倍，过期自动清理。
- * 3. **KV 写入量**：仅对 API 与页面导航生效（静态资源在中间件里被跳过），
- *    以免每个 CSS/JS/图片请求都产生一次 KV 写入。
+ * 3. 本文件的导出都在使用中：`checkRateLimit`（两处调用）、`getClientIp`
+ *    （本文件内部使用，同时作为工具函数对外保留）。
  *
  * 用法：
- *   const blocked = await checkRateLimit(request, env, { key: 'api', max: 120, windowSeconds: 60 });
+ *   const blocked = await checkRateLimit(request, env, { key: 'write', max: 120, windowSeconds: 60 });
  *   if (blocked) return blocked;
  */
 
@@ -31,6 +40,7 @@ export function getClientIp(request) {
 
 /**
  * 检查是否超出频率限制。
+ * 注意：成功走到 KV 分支时固定消耗 1 次 KV 读 + 1 次 KV 写，勿用于高频读请求。
  * @param {Request} request 当前请求
  * @param {{mlttckv?: KVNamespace}} env 环境绑定
  * @param {object} [options]
